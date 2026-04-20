@@ -1,14 +1,19 @@
-# 🚗 Parkify Smart Parking Management System
+# 🚗 Parkify Smart Parking Management System (MongoDB Stack)
 
-A modern full-stack **Smart Parking & Vehicle Service Platform** designed to simplify parking discovery, reservation, payments, and management through a web and mobile ecosystem.
+A modern full-stack **Smart Parking & Vehicle Service Platform** designed to simplify parking discovery, reservation, payments, and management through a **web + mobile ecosystem** powered by **Node.js, Express, MongoDB, and React Native**.
 
 ---
 
 # 📌 Project Overview
 
-Parkify is a **web + mobile-based smart parking solution** that enables users to find parking spaces, make reservations, manage parking facilities, and access vehicle-related services in real time.
+Parkify is a scalable **smart parking management system** that enables users to find parking spaces, make reservations, manage parking facilities, and access vehicle-related services in real time.
 
-It supports both **web application (Spring Boot)** and **mobile application (React Native)**.
+The system is built using a modern MERN-style architecture:
+
+* 🖥️ Backend: Node.js + Express
+* 🗄️ Database: MongoDB (Mongoose ODM)
+* 📱 Mobile App: React Native (Expo)
+* 🌐 Web/Admin UI: HTML, CSS, JavaScript (optional extension)
 
 ---
 
@@ -24,7 +29,7 @@ It supports both **web application (Spring Boot)** and **mobile application (Rea
 
 # 🧩 System Modules
 
-* User Management
+* User Management (Auth + Profiles)
 * Parking Place Management
 * Reservation Management
 * Payment Management
@@ -36,18 +41,14 @@ It supports both **web application (Spring Boot)** and **mobile application (Rea
 
 # 🛠️ Technology Stack
 
-## 💻 Web Backend
+## 💻 Backend
 
-* Java Spring Boot
-* MySQL Database
-* REST APIs
-* Git & GitHub
-
-## 🌐 Frontend (Web)
-
-* HTML
-* CSS
-* JavaScript
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* JWT Authentication
+* bcryptjs (Password hashing)
 
 ## 📱 Mobile App
 
@@ -56,9 +57,21 @@ It supports both **web application (Spring Boot)** and **mobile application (Rea
 * Axios (API Integration)
 * Functional Components & Hooks
 
+## 🌐 Optional Web UI
+
+* HTML
+* CSS
+* JavaScript
+
 ## 🗺️ Maps Integration
 
 * Google Maps (Navigation & Location Services)
+
+## 🔧 Tools
+
+* Git & GitHub
+* Postman (API Testing)
+* MongoDB Compass
 
 ---
 
@@ -89,42 +102,60 @@ It supports both **web application (Spring Boot)** and **mobile application (Rea
 
 ---
 
-# 📱 Mobile App Features (Parkify App)
+# 📱 Mobile App Features (React Native)
 
-* Secure login & registration system
-* Real-time API-based data fetching
+* Secure login & registration (JWT Auth)
+* Real-time API data fetching
 * Fully dynamic UI (no hardcoded data)
 * Form validation for better UX
 * Smooth navigation between modules
+* AI Assistant integration (chat support)
 
 ---
 
-# 👨‍💻 Team Members & Responsibilities
-
-| Registration Number | Name                        | Module                            |
-| ------------------- | --------------------------- | --------------------------------- |
-| IT24101654          | HASARINDA W.D.Y.L.          | User Management + AI Assistant    |
-| IT24102636          | DISSANAYAKE R.P.Y.R.        | Parking Place Management          |
-| IT24101671          | MUNTHAS F.M.                | Reservation Management            |
-| IT24101820          | VIKIRUTHAN P.               | Payment Management                |
-| IT24100902          | CHANDANAYAKE M.W.H.A.       | Inventory Management              |
-| IT24100036          | SURENTHIRAN K.              | Vehicle Service Center Management |
-
----
-
-# 🏗️ Backend Architecture
+# 🏗️ Backend Architecture (Node.js)
 
 ```
-src/main/java/
- ├── controller/   → Handles HTTP requests
- ├── service/      → Business logic layer
- ├── repository/   → Database access layer
- └── entity/       → Data models
+backend/
+ ├── models/        → Mongoose schemas
+ ├── routes/        → API endpoints
+ ├── controllers/   → Business logic
+ ├── middleware/    → Auth & validation
+ └── config/        → DB connection
 ```
 
 ---
 
-# 📦 Mobile App Setup
+# 🗄️ Database (MongoDB)
+
+## Example Connection
+
+```js
+mongoose.connect("mongodb://localhost:27017/parkify");
+```
+
+## Example User Schema
+
+```js
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  password: String,
+  role: String
+});
+```
+
+---
+
+# 🔐 Authentication Flow
+
+* User Registration → Password hashed using bcryptjs
+* Login → JWT token generated
+* Protected routes → JWT middleware validation
+
+---
+
+# 📦 Mobile App Setup (React Native)
 
 ### 1️⃣ Clone Repository
 
@@ -145,33 +176,61 @@ npm install
 npx expo start
 ```
 
-➡️ Scan QR code using **Expo Go** app
+➡️ Scan QR code using **Expo Go**
 
 ---
 
-# 🗄️ Database Setup
+# ⚙️ Backend Setup (Node.js)
 
-```sql
-CREATE DATABASE smart_parking_db;
+### 1️⃣ Install Dependencies
+
+```bash
+npm install
 ```
 
-Update `application.properties`:
+### 2️⃣ Start Server
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/smart_parking_db
-spring.datasource.username=root
-spring.datasource.password=your_password
+```bash
+npm run dev
 ```
+
+Server runs on:
+
+```
+http://localhost:5000
+```
+
+---
+
+# 👨‍💻 Team Members & Responsibilities
+
+| Registration Number | Name                        | Module                            |
+| ------------------- | --------------------------- | --------------------------------- |
+| IT24101654          | HASARINDA W.D.Y.L. (Leader) | User Management + AI Assistant    |
+| IT24102636          | DISSANAYAKE R.P.Y.R.        | Parking Place Management          |
+| IT24101671          | MUNTHAS F.M.                | Reservation Management            |
+| IT24101820          | VIKIRUTHAN P.               | Payment Management                |
+| IT24100902          | CHANDANAYAKE M.W.H.A.       | Inventory Management              |
+| IT24100036          | SURENTHIRAN K.              | Vehicle Service Center Management |
+
+---
+
+# 🤖 AI Assistant Module
+
+* AI-powered chat assistant
+* Handles parking queries
+* Suggests parking availability
+* Integrated via backend API (`/api/ai/chat`)
 
 ---
 
 # 📊 Future Enhancements
 
-* 📱 Native Android/iOS deployment
+* 📱 Native Android/iOS build
 * 🔔 Real-time notifications
 * 📡 Live parking slot tracking
 * 🤖 AI-based parking prediction system
-* 💳 Payment gateway integration
+* 💳 Stripe / online payment gateway
 * 📷 Camera-based slot detection
 
 ---
