@@ -3,7 +3,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useAuth } from '../context/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { View, TouchableOpacity, Text, StyleSheet, SafeAreaView, StatusBar, Platform, Image } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, StatusBar, Platform, Image } from 'react-native';
+import { COLORS } from '../theme/theme';
+
+// Auth Screens for post-reg setup
+import SetupProfileScreen from '../screens/auth/SetupProfileScreen';
 
 // Admin Screens
 import AdminDashboard from '../screens/admin/AdminDashboard';
@@ -15,11 +19,17 @@ import AdminNotifications from '../screens/admin/AdminNotifications';
 import DriverDashboard from '../screens/DriverDashboard';
 import AddVehicleScreen from '../screens/AddVehicleScreen';
 import VehicleListScreen from '../screens/VehicleListScreen';
+import EditVehicleScreen from '../screens/EditVehicleScreen';
+import VehicleSetupScreen from '../screens/VehicleSetupScreen';
+import DriverProfileScreen from '../screens/DriverProfileScreen';
+
+// Parking Owner Screens
+import ParkingOwnerDashboard from '../screens/ParkingOwnerDashboard';
 
 const Stack = createStackNavigator();
 const Tab = createMaterialTopTabNavigator();
 
-const CustomAdminHeader = ({ state, navigation }) => {
+const CustomGlobalHeader = ({ state, navigation, title }) => {
   const { logout } = useAuth();
   
   const icons = {
@@ -27,12 +37,21 @@ const CustomAdminHeader = ({ state, navigation }) => {
     Users: 'account-group',
     Notifications: 'bell',
     Profile: 'account-circle',
+    OwnerDashboard: 'view-dashboard',
+    DriverDashboard: 'view-dashboard',
   };
 
   return (
     <View style={styles.headerOuter}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
       <View style={styles.headerContainer}>
+        {/* Back Button */}
+        {navigation.canGoBack() && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
+
         {/* Logo Section */}
         <View style={styles.logoContainer}>
           <Image 
@@ -43,34 +62,41 @@ const CustomAdminHeader = ({ state, navigation }) => {
           <Text style={styles.logoText}>PARKIFY</Text>
         </View>
         
-        {/* Navigation Icons Section */}
-        <View style={styles.navIcons}>
-          {state.routes.map((route, index) => {
-            const isFocused = state.index === index;
-            const iconName = icons[route.name] || 'circle';
+        {/* Tab Icons (Only if multiple tabs exist) */}
+        {state && state.routes && state.routes.length > 1 && (
+          <View style={styles.navIcons}>
+            {state.routes.map((route, index) => {
+              const isFocused = state.index === index;
+              const iconName = icons[route.name] || 'circle';
 
-            return (
-              <TouchableOpacity
-                key={route.key}
-                onPress={() => navigation.navigate(route.name)}
-                style={[styles.navBtn, isFocused && styles.navBtnActive]}
-                activeOpacity={0.7}
-              >
-                <MaterialCommunityIcons 
-                  name={iconName} 
-                  size={22} 
-                  color={isFocused ? '#B26969' : '#2D4057'} 
-                />
-                {isFocused && <View style={styles.activeDot} />}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+              return (
+                <TouchableOpacity
+                  key={route.key}
+                  onPress={() => navigation.navigate(route.name)}
+                  style={[styles.navBtn, isFocused && styles.navBtnActive]}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons 
+                    name={iconName} 
+                    size={22} 
+                    color={isFocused ? COLORS.secondary : COLORS.primary} 
+                  />
+                  {isFocused && <View style={styles.activeDot} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Title if no tabs */}
+        {(!state || !state.routes || state.routes.length <= 1) && (
+           <Text style={styles.headerTitle}>{title}</Text>
+        )}
 
         {/* Logout Section */}
         <TouchableOpacity onPress={() => logout()} style={styles.logoutBtn} activeOpacity={0.7}>
           <View style={styles.logoutCircle}>
-             <MaterialCommunityIcons name="logout" size={18} color="#B26969" />
+             <MaterialCommunityIcons name="logout" size={18} color={COLORS.secondary} />
           </View>
         </TouchableOpacity>
       </View>
@@ -80,10 +106,8 @@ const CustomAdminHeader = ({ state, navigation }) => {
 
 const AdminTabNavigator = () => (
   <Tab.Navigator
-    tabBar={props => <CustomAdminHeader {...props} />}
-    screenOptions={{
-      swipeEnabled: true,
-    }}
+    tabBar={props => <CustomGlobalHeader {...props} />}
+    screenOptions={{ swipeEnabled: true }}
   >
     <Tab.Screen name="Dashboard" component={AdminDashboard} />
     <Tab.Screen name="Users" component={ManageUsers} />
@@ -93,22 +117,40 @@ const AdminTabNavigator = () => (
 );
 
 const DriverStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="DriverDashboard" component={DriverDashboard} />
+    <Stack.Screen name="AddVehicle" component={AddVehicleScreen} />
+    <Stack.Screen name="VehicleList" component={VehicleListScreen} />
+    <Stack.Screen name="EditVehicle" component={EditVehicleScreen} />
+    <Stack.Screen name="DriverProfile" component={DriverProfileScreen} />
+  </Stack.Navigator>
+);
+
+const OwnerStack = () => (
   <Stack.Navigator screenOptions={{ 
-    headerStyle: { backgroundColor: '#FFF' },
-    headerTintColor: '#2D4057',
-    headerTitleStyle: { fontWeight: 'bold' }
+    header: (props) => <CustomGlobalHeader {...props} />
   }}>
-    <Stack.Screen name="DriverDashboard" component={DriverDashboard} options={{ title: 'Dashboard' }} />
-    <Stack.Screen name="AddVehicle" component={AddVehicleScreen} options={{ title: 'Add Vehicle' }} />
-    <Stack.Screen name="VehicleList" component={VehicleListScreen} options={{ title: 'My Vehicles' }} />
+    <Stack.Screen name="OwnerDashboard" component={ParkingOwnerDashboard} />
   </Stack.Navigator>
 );
 
 const MainNavigator = () => {
   const { user } = useAuth();
 
+  if (user && user.role !== 'SUPER_ADMIN' && !user.isProfileComplete) {
+     return (
+       <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="SetupProfile" component={SetupProfileScreen} />
+          <Stack.Screen name="VehicleSetup" component={VehicleSetupScreen} />
+       </Stack.Navigator>
+     );
+  }
+
   if (user?.role === 'SUPER_ADMIN') {
     return <AdminTabNavigator />;
+  }
+  if (user?.role === 'PARKING_OWNER') {
+    return <OwnerStack />;
   }
 
   return <DriverStack />;
@@ -145,8 +187,13 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#B26969',
+    color: COLORS.secondary,
     letterSpacing: 0.5,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.primary,
   },
   navIcons: {
     flexDirection: 'row',
@@ -170,7 +217,11 @@ const styles = StyleSheet.create({
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: '#B26969',
+    backgroundColor: COLORS.secondary,
+  },
+  headerBackBtn: {
+    marginRight: 10,
+    padding: 5,
   },
   logoutBtn: {
     padding: 5,
