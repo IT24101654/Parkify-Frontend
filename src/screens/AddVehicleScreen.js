@@ -9,15 +9,19 @@ import {
   Platform,
   Alert,
   TouchableOpacity,
+  Image,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { COLORS, FONTS, SIZES } from '../styles/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { COLORS, SHADOWS } from '../theme/theme';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
+import * as ImagePicker from 'expo-image-picker';
 import api from '../services/api';
 
 const AddVehicleScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
+  const [vehicleImage, setVehicleImage] = useState(null);
+  const [licenseImage, setLicenseImage] = useState(null);
   const [formData, setFormData] = useState({
     vehicleNumber: '',
     brand: '',
@@ -26,18 +30,105 @@ const AddVehicleScreen = ({ navigation }) => {
     fuelType: 'Petrol',
   });
 
+  const pickImage = async (imageType) => {
+    Alert.alert(
+      'Select ImageSource',
+      'Choose where to get the image from',
+      [
+        {
+          text: 'Camera',
+          onPress: () => handleImageSource(imageType, 'camera'),
+        },
+        {
+          text: 'Gallery',
+          onPress: () => handleImageSource(imageType, 'gallery'),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  const handleImageSource = async (imageType, source) => {
+    let result;
+    const options = {
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.5,
+    };
+
+    if (source === 'camera') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Camera permission is required');
+        return;
+      }
+      result = await ImagePicker.launchCameraAsync(options);
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync(options);
+    }
+
+    if (!result.canceled) {
+      if (imageType === 'vehicle') setVehicleImage(result.assets[0].uri);
+      else setLicenseImage(result.assets[0].uri);
+    }
+  };
+
   const handleAddVehicle = async () => {
     if (!formData.vehicleNumber || !formData.brand || !formData.model) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
+    if (!vehicleImage || !licenseImage) {
+      Alert.alert('Error', 'Please upload both Vehicle Image and Revenue License Copy');
+      return;
+    }
 
     setLoading(true);
     try {
-      await api.post('/vehicles', formData);
+      const data = new FormData();
+      data.append('vehicleNumber', formData.vehicleNumber);
+      data.append('brand', formData.brand);
+      data.append('model', formData.model);
+      data.append('type', formData.type);
+      data.append('fuelType', formData.fuelType);
+
+      if (vehicleImage) {
+        const uriParts = vehicleImage.split('.');
+        const extension = uriParts[uriParts.length - 1].toLowerCase();
+        const type = extension === 'jpg' ? 'jpeg' : extension;
+        
+        data.append('vehicleImage', {
+          uri: Platform.OS === 'android' ? vehicleImage : vehicleImage.replace('file://', ''),
+          name: `vehicle_${Date.now()}.${extension}`,
+          type: `image/${type}`,
+        });
+      }
+
+      if (licenseImage) {
+        const uriParts = licenseImage.split('.');
+        const extension = uriParts[uriParts.length - 1].toLowerCase();
+        const type = extension === 'jpg' ? 'jpeg' : extension;
+
+        data.append('licenseImage', {
+          uri: Platform.OS === 'android' ? licenseImage : licenseImage.replace('file://', ''),
+          name: `license_${Date.now()}.${extension}`,
+          type: `image/${type}`,
+        });
+      }
+
+      await api.post('/vehicles', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        transformRequest: (data) => data,
+      });
+
       Alert.alert('Success', 'Vehicle added successfully');
       navigation.goBack();
     } catch (error) {
+      console.error('Upload Error:', error);
       Alert.alert('Error', error.response?.data?.message || 'Failed to add vehicle');
     } finally {
       setLoading(false);
@@ -46,20 +137,43 @@ const AddVehicleScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={COLORS.navyDeep} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Add New Vehicle</Text>
-        <View style={{ width: 24 }} />
-      </View>
-
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.formCard}>
+          <View style={styles.headerTitleRow}>
+            <Text style={styles.headerTitle}>Add New Vehicle</Text>
+            <Text style={styles.headerSubtitle}>Enter your vehicle details below</Text>
+          </View>
+
+          <View style={[styles.formCard, SHADOWS.medium]}>
+            {/* Vehicle Image Picker */}
+            <Text style={styles.imageLabel}>Vehicle Photo (Required)</Text>
+            <TouchableOpacity style={styles.imagePicker} onPress={() => pickImage('vehicle')}>
+              {vehicleImage ? (
+                <Image source={{ uri: vehicleImage }} style={styles.previewImage} />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <MaterialCommunityIcons name="car-outline" size={32} color="#9C8C79" />
+                  <Text style={styles.imagePlaceholderText}>Upload Vehicle Photo</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* License Image Picker */}
+            <Text style={styles.imageLabel}>Revenue License Copy (Required)</Text>
+            <TouchableOpacity style={styles.imagePicker} onPress={() => pickImage('license')}>
+              {licenseImage ? (
+                <Image source={{ uri: licenseImage }} style={styles.previewImage} />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <MaterialCommunityIcons name="file-document-outline" size={32} color="#9C8C79" />
+                  <Text style={styles.imagePlaceholderText}>Upload License Copy</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
             <CustomInput
               label="Vehicle Number"
               placeholder="e.g. CAS-1234"
@@ -96,7 +210,7 @@ const AddVehicleScreen = ({ navigation }) => {
 
             <Text style={styles.label}>Fuel Type</Text>
             <View style={styles.pickerRow}>
-              {['Petrol', 'Diesel', 'Electric'].map((fuel) => (
+              {['Petrol', 'Diesel', 'Hybrid', 'EV'].map((fuel) => (
                 <TouchableOpacity
                   key={fuel}
                   style={[styles.pickerItem, formData.fuelType === fuel && styles.pickerActive]}
@@ -125,59 +239,97 @@ const AddVehicleScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bgLight,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: SIZES.padding,
-    backgroundColor: COLORS.cardWhite,
-  },
-  title: {
-    ...FONTS.h3,
-    color: COLORS.navyDeep,
+    backgroundColor: '#FFF',
   },
   scrollContent: {
-    padding: SIZES.padding,
+    padding: 20,
+  },
+  headerTitleRow: {
+    alignItems: 'center',
+    marginBottom: 25,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#2D4057',
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#7A868E',
+    marginTop: 4,
   },
   formCard: {
-    backgroundColor: COLORS.cardWhite,
-    borderRadius: SIZES.radius,
-    padding: SIZES.padding,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  imageLabel: {
+    fontSize: 14,
+    color: '#2D4057',
+    fontWeight: '700',
+    marginBottom: 10,
+    marginTop: 5,
+  },
+  imagePicker: {
+    width: '100%',
+    height: 140,
+    backgroundColor: '#FAF7F4',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#F0EBE6',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    overflow: 'hidden',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  imagePlaceholder: {
+    alignItems: 'center',
+  },
+  imagePlaceholderText: {
+    marginTop: 10,
+    fontSize: 12,
+    color: '#9C8C79',
+    fontWeight: '600',
   },
   label: {
-    ...FONTS.caption,
-    color: COLORS.navyDeep,
+    fontSize: 14,
+    color: '#2D4057',
+    fontWeight: '700',
+    marginTop: 15,
     marginBottom: 10,
-    marginTop: 10,
-    fontWeight: '600',
   },
   pickerRow: {
     flexDirection: 'row',
-    marginBottom: 15,
+    gap: 8,
+    marginBottom: 10,
+    flexWrap: 'wrap',
   },
   pickerItem: {
-    flex: 1,
-    paddingVertical: 10,
+    flexBasis: '30%',
+    paddingVertical: 12,
     alignItems: 'center',
-    borderRadius: SIZES.radius,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#DDD',
-    marginRight: 10,
+    borderColor: '#F0F0F0',
+    backgroundColor: '#F9FAFB',
   },
   pickerActive: {
-    backgroundColor: COLORS.primaryCoral,
-    borderColor: COLORS.primaryCoral,
+    backgroundColor: '#B26969',
+    borderColor: '#B26969',
   },
   pickerText: {
-    ...FONTS.body,
-    color: COLORS.textMain,
+    fontSize: 12,
+    color: '#7A868E',
+    fontWeight: '600',
   },
   pickerTextActive: {
     color: '#FFF',
