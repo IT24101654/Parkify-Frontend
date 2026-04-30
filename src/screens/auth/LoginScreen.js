@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from '../../theme/theme';
+import BackButton from '../../components/BackButton';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -66,9 +67,7 @@ const LoginScreen = ({ navigation }) => {
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <MaterialCommunityIcons name="arrow-left" size={28} color="#2D4057" />
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} />
           <View style={styles.header}>
             <Image 
               source={require('../../../assets/Parkify.png')} 
@@ -111,7 +110,10 @@ const LoginScreen = ({ navigation }) => {
               </View>
             </View>
 
-            <TouchableOpacity style={styles.forgotPassword}>
+            <TouchableOpacity 
+              style={styles.forgotPassword}
+              onPress={() => navigation.navigate('ForgotPassword')}
+            >
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
 
@@ -146,7 +148,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: COLORS.background,
   },
   flex: {
     flex: 1,
@@ -157,14 +159,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? 10 : 0,
     justifyContent: 'center',
   },
-  backButton: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    marginTop: Platform.OS === 'android' ? 40 : 5,
-    marginBottom: 5,
-    marginLeft: -5,
-  },
+
   header: {
     alignItems: 'center',
     marginBottom: 40,
@@ -177,12 +172,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: '900',
-    color: '#2D4057',
+    color: COLORS.primary,
     letterSpacing: -1,
   },
   subtitle: {
     fontSize: 16,
-    color: '#7A868E',
+    color: COLORS.textMuted,
     marginTop: 8,
     fontWeight: '500',
   },
@@ -195,17 +190,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#2D4057',
+    color: COLORS.text,
     marginBottom: 10,
     marginLeft: 4,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F7FAFC',
+    backgroundColor: COLORS.surface,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#EDF2F7',
+    borderColor: COLORS.gray200,
     paddingHorizontal: 15,
   },
   inputIcon: {
@@ -215,7 +210,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#2D4057',
+    color: COLORS.text,
     fontWeight: '500',
   },
   forgotPassword: {
@@ -223,12 +218,12 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   forgotPasswordText: {
-    color: '#4A90E2',
+    color: COLORS.secondary,
     fontWeight: '700',
     fontSize: 14,
   },
   primaryButton: {
-    backgroundColor: '#2D4057',
+    backgroundColor: COLORS.primary,
     paddingVertical: 18,
     borderRadius: 14,
     alignItems: 'center',
@@ -239,7 +234,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryButtonText: {
-    color: '#FFF',
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: '800',
   },
@@ -249,12 +244,12 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   footerText: {
-    color: '#7A868E',
+    color: COLORS.textMuted,
     fontSize: 15,
     fontWeight: '500',
   },
   signUpText: {
-    color: '#B26969',
+    color: COLORS.secondary,
     fontWeight: '800',
     fontSize: 15,
   },

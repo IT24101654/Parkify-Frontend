@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from '../../theme/theme';
+import BackButton from '../../components/BackButton';
 import api from '../../services/api';
 
 const RegisterScreen = ({ navigation }) => {
@@ -87,9 +88,7 @@ const RegisterScreen = ({ navigation }) => {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButtonTop}>
-            <MaterialCommunityIcons name="arrow-left" size={28} color="#2D4057" />
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} />
 
           <View style={styles.header}>
             <Image 
@@ -144,9 +143,7 @@ const RegisterScreen = ({ navigation }) => {
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <TouchableOpacity onPress={() => setRole(null)} style={styles.backButtonTop}>
-            <MaterialCommunityIcons name="arrow-left" size={28} color="#2D4057" />
-          </TouchableOpacity>
+          <BackButton onPress={() => setRole(null)} />
 
           <View style={styles.header}>
             <Image 
@@ -271,17 +268,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 30,
     paddingTop: Platform.OS === 'android' ? 10 : 0,
-    paddingBottom: 30,
+    paddingBottom: 40,
   },
-  backButtonTop: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    marginTop: Platform.OS === 'android' ? 40 : 10,
-    marginBottom: 10,
-    marginLeft: -10,
-    zIndex: 10,
-  },
+
   header: {
     alignItems: 'center',
     marginBottom: 30,
@@ -347,7 +336,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#2D4057',
-    marginBottom: 8,
+    marginBottom: 12,
     marginLeft: 4,
   },
   inputWrapper: {

@@ -13,17 +13,15 @@ import {
   StatusBar
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from '../../theme/theme';
+import { COLORS, SHADOWS } from '../../theme/theme';
 import BackButton from '../../components/BackButton';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
-const OTPVerificationScreen = ({ route, navigation }) => {
-  const { email, role, type, password } = route.params;
+const ResetOTPVerificationScreen = ({ route, navigation }) => {
+  const { email } = route.params;
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [timer, setTimer] = useState(60);
-  const { login, registerSuccess } = useAuth();
   
   const inputRefs = useRef([]);
 
@@ -53,7 +51,7 @@ const OTPVerificationScreen = ({ route, navigation }) => {
     }
   };
 
-  const handleVerify = async () => {
+  const handleVerifyOTP = async () => {
     const otpCode = otp.join('');
     if (otpCode.length < 6) {
       Alert.alert('Error', 'Please enter the 6-digit OTP code.');
@@ -62,24 +60,15 @@ const OTPVerificationScreen = ({ route, navigation }) => {
 
     setIsLoading(true);
     try {
-      if (type === 'REGISTER') {
-        const response = await api.post('/auth/verify-register-otp', {
-          email,
-          otp: otpCode,
-          role
-        });
-        
-        if (response.data.token) {
-          await registerSuccess(response.data.user, response.data.token);
-        }
-      } else {
-        const result = await login(email, password, otpCode, role);
-        if (!result.success) {
-          Alert.alert('Verification Failed', result.message);
-        }
-      }
+      await api.post('/auth/verify-reset-otp', {
+        email,
+        otp: otpCode
+      });
+      
+      // Navigate to NewPasswordScreen, passing email and verified OTP
+      navigation.navigate('NewPassword', { email, otp: otpCode });
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || 'Verification failed');
+      Alert.alert('Error', error.response?.data?.message || 'Invalid OTP');
     } finally {
       setIsLoading(false);
     }
@@ -88,11 +77,7 @@ const OTPVerificationScreen = ({ route, navigation }) => {
   const handleResend = async () => {
     setTimer(60);
     try {
-      if (type === 'REGISTER') {
-        await api.post('/auth/register-otp', { email }); // Basic resend if supported
-      } else {
-        await api.post('/auth/login', { email, password });
-      }
+      await api.post('/auth/forgot-password', { email });
       Alert.alert('Success', 'OTP has been resent to your email.');
     } catch (error) {
       Alert.alert('Error', 'Failed to resend OTP');
@@ -101,7 +86,7 @@ const OTPVerificationScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -110,10 +95,10 @@ const OTPVerificationScreen = ({ route, navigation }) => {
 
         <View style={styles.content}>
           <View style={styles.iconCircle}>
-            <MaterialCommunityIcons name="shield-check-outline" size={40} color="#B26969" />
+            <MaterialCommunityIcons name="shield-key-outline" size={40} color={COLORS.secondary} />
           </View>
           
-          <Text style={styles.title}>Verification</Text>
+          <Text style={styles.title}>Verify OTP</Text>
           <Text style={styles.subtitle}>
             Enter the 6-digit code sent to{'\n'}
             <Text style={styles.emailText}>{email}</Text>
@@ -136,11 +121,11 @@ const OTPVerificationScreen = ({ route, navigation }) => {
 
           <TouchableOpacity 
             style={[styles.verifyBtn, SHADOWS.medium]}
-            onPress={handleVerify}
+            onPress={handleVerifyOTP}
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#FFF" />
+              <ActivityIndicator color={COLORS.white} />
             ) : (
               <Text style={styles.verifyBtnText}>Verify OTP</Text>
             )}
@@ -173,9 +158,9 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
-    paddingHorizontal: 30,
+    paddingHorizontal: 25,
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 10,
   },
   iconCircle: {
     width: 80,
@@ -184,20 +169,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray100,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: 20,
     ...SHADOWS.small,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '900',
     color: COLORS.primary,
-    marginBottom: 10,
+    marginBottom: 5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: COLORS.textMuted,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
     marginBottom: 40,
     fontWeight: '500',
   },
@@ -212,13 +197,13 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   otpInput: {
-    width: 48,
-    height: 58,
-    borderRadius: 14,
+    width: 45,
+    height: 55,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: COLORS.gray200,
     textAlign: 'center',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: COLORS.text,
     backgroundColor: COLORS.surface,
@@ -233,6 +218,7 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 14,
     alignItems: 'center',
+    marginTop: 10,
   },
   verifyBtnText: {
     color: COLORS.white,
@@ -241,7 +227,8 @@ const styles = StyleSheet.create({
   },
   resendContainer: {
     flexDirection: 'row',
-    marginTop: 30,
+    marginTop: 25,
+    marginBottom: 30,
   },
   resendText: {
     color: COLORS.textMuted,
@@ -261,4 +248,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OTPVerificationScreen;
+export default ResetOTPVerificationScreen;
