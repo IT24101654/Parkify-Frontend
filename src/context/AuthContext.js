@@ -44,14 +44,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const registerSuccess = async (userData, token) => {
+    await AsyncStorage.setItem('user', JSON.stringify(userData));
+    await AsyncStorage.setItem('token', token);
+    setUser(userData);
+  };
+
   const logout = async () => {
     setUser(null);
     await AsyncStorage.removeItem('user');
     await AsyncStorage.removeItem('token');
   };
 
+  const updateUser = async (updatedData) => {
+    const newUser = { ...user, ...updatedData };
+    setUser(newUser);
+    await AsyncStorage.setItem('user', JSON.stringify(newUser));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, registerSuccess, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

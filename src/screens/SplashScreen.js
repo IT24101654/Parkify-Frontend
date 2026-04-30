@@ -12,7 +12,6 @@ const SplashScreen = ({ onFinish }) => {
   const bounceAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // 1. Car bounce animation loop
     Animated.loop(
       Animated.sequence([
         Animated.timing(bounceAnim, {
@@ -28,26 +27,22 @@ const SplashScreen = ({ onFinish }) => {
       ])
     ).start();
 
-    // 2. Sequence of main animations
     Animated.sequence([
-      // Fade in the background and logo
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 800,
         useNativeDriver: true,
       }),
-      // Drive the car across the screen (taking about 4 seconds)
       Animated.parallel([
         Animated.timing(carPos, {
           toValue: width + 100,
           duration: 4000,
           useNativeDriver: true,
         }),
-        // Fade in tagline halfway
         Animated.timing(textAnim, {
           toValue: 1,
           duration: 1500,
-          delay: 1000,
+          delay: 1000,  
           useNativeDriver: true,
         })
       ])
@@ -85,18 +80,16 @@ const SplashScreen = ({ onFinish }) => {
               transform: [
                 { translateX: carPos },
                 { translateY: bounceAnim },
-                { scaleX: 1 } // Ensure icon faces right (direction of travel)
+                { scaleX: 1 } 
               ] 
             }
           ]}>
             <MaterialCommunityIcons name="car-side" size={75} color="#b26969" />
-            {/* Sharp Triangular Headlight Beam (as per reference image) */}
             <View style={styles.sharpBeam} />
             <View style={styles.headlightCore} />
           </Animated.View>
         </View>
 
-        {/* Bottom Tagline */}
         <Animated.View style={[styles.footer, { opacity: textAnim }]}>
           <Text style={styles.tagline}>Happy Parking, Happy Driving!</Text>
           <Text style={styles.loadingText}>Initializing Smart Infrastructure...</Text>
@@ -120,7 +113,7 @@ const SplashScreen = ({ onFinish }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1E1E', // Dark professional background
+    backgroundColor: '#1E1E1E',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -164,7 +157,7 @@ const styles = StyleSheet.create({
   headlightCore: {
     position: 'absolute',
     right: 5,
-    top: 38, // Moved up from 50
+    top: 38, 
     width: 8,
     height: 8,
     backgroundColor: '#FFF',
@@ -177,7 +170,7 @@ const styles = StyleSheet.create({
   },
   sharpBeam: {
     position: 'absolute',
-    right: -250, // Slightly shorter for better stability
+    right: -250, 
     top: 13,
     width: 0,
     height: 0,
