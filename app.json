@@ -28,7 +28,12 @@
       "favicon": "./assets/Parkify.png",
       "bundler": "metro",
       "display": "standalone",
-      "backgroundColor": "#121212"
+      "backgroundColor": "#121212",
+      "meta": {
+        "apple-mobile-web-app-capable": "yes",
+        "apple-mobile-web-app-status-bar-style": "black-translucent",
+        "apple-mobile-web-app-title": "Parkify"
+      }
     },
     "plugins": [
       "expo-font",
