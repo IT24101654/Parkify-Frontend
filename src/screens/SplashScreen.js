@@ -42,7 +42,7 @@ const SplashScreen = ({ onFinish }) => {
         Animated.timing(textAnim, {
           toValue: 1,
           duration: 1500,
-          delay: 1000,  
+          delay: 1000,
           useNativeDriver: true,
         })
       ])
@@ -75,13 +75,13 @@ const SplashScreen = ({ onFinish }) => {
         <View style={styles.roadContainer}>
           <View style={styles.roadLine} />
           <Animated.View style={[
-            styles.carWrapper, 
-            { 
+            styles.carWrapper,
+            {
               transform: [
                 { translateX: carPos },
                 { translateY: bounceAnim },
-                { scaleX: 1 } 
-              ] 
+                { scaleX: 1 }
+              ]
             }
           ]}>
             <MaterialCommunityIcons name="car-side" size={75} color="#b26969" />
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   headlightCore: {
     position: 'absolute',
     right: 5,
-    top: 38, 
+    top: 38,
     width: 8,
     height: 8,
     backgroundColor: '#FFF',
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   sharpBeam: {
     position: 'absolute',
-    right: -250, 
+    right: -250,
     top: 13,
     width: 0,
     height: 0,

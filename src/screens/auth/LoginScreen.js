@@ -24,6 +24,8 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showRoleSelect, setShowRoleSelect] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState([]);
   const { login } = useAuth();
 
   const handleLoginSubmit = async () => {
@@ -49,11 +51,33 @@ const LoginScreen = ({ navigation }) => {
           type: 'LOGIN' 
         });
       } else if (status === 'ROLE_SELECTION_REQUIRED') {
-        Alert.alert('Role Selection', 'Multiple roles found. Role selection flow coming soon.');
+        setAvailableRoles(roles);
+        setShowRoleSelect(true);
       }
     } catch (error) {
       const msg = error.response?.data?.message || 'Invalid email or password.';
       Alert.alert('Login Error', msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRoleSelection = async (role) => {
+    setIsLoading(true);
+    try {
+      await api.post('/auth/select-role', {
+        email: email.trim().toLowerCase(),
+        role: role
+      });
+      setShowRoleSelect(false);
+      navigation.navigate('OTPVerification', { 
+        email: email.trim().toLowerCase(), 
+        password, 
+        role, 
+        type: 'LOGIN' 
+      });
+    } catch (error) {
+      Alert.alert('Error', error.response?.data?.message || 'Failed to select role');
     } finally {
       setIsLoading(false);
     }
@@ -79,59 +103,97 @@ const LoginScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.formContainer}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialCommunityIcons name="email-outline" size={20} color="#7A868E" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  placeholderTextColor="#A0AEC0"
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialCommunityIcons name="lock-outline" size={20} color="#7A868E" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  placeholderTextColor="#A0AEC0"
-                />
-              </View>
-            </View>
-
-            <TouchableOpacity 
-              style={styles.forgotPassword}
-              onPress={() => navigation.navigate('ForgotPassword')}
-            >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.primaryButton, SHADOWS.medium]}
-              onPress={handleLoginSubmit}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <View style={styles.btnContent}>
-                  <Text style={styles.primaryButtonText}>Continue</Text>
-                  <MaterialCommunityIcons name="arrow-right" size={20} color="#FFF" />
+            {showRoleSelect ? (
+              <View style={styles.roleSelectionContainer}>
+                <Text style={styles.titleSmall}>Choose Account</Text>
+                <Text style={styles.roleSubtitle}>
+                  Your email is linked to multiple accounts. Select which one to log in as:
+                </Text>
+                
+                <View style={styles.roleBtnGroup}>
+                  {availableRoles.map((role) => (
+                    <TouchableOpacity 
+                      key={role}
+                      style={styles.roleBtn}
+                      onPress={() => handleRoleSelection(role)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.roleIconBox}>
+                        <MaterialCommunityIcons 
+                          name={role === 'DRIVER' ? 'steering' : 'home-city'} 
+                          size={24} 
+                          color="#FFF" 
+                        />
+                      </View>
+                      <Text style={styles.roleBtnText}>
+                        {role === 'DRIVER' ? 'Driver' : 'Parking Owner'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              )}
-            </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setShowRoleSelect(false)} style={styles.backBtn}>
+                  <Text style={styles.signUpText}>Back to Login</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Email Address</Text>
+                  <View style={styles.inputWrapper}>
+                    <MaterialCommunityIcons name="email-outline" size={20} color="#7A868E" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your email"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      placeholderTextColor="#A0AEC0"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Password</Text>
+                  <View style={styles.inputWrapper}>
+                    <MaterialCommunityIcons name="lock-outline" size={20} color="#7A868E" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry
+                      placeholderTextColor="#A0AEC0"
+                    />
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  style={styles.forgotPassword}
+                  onPress={() => navigation.navigate('ForgotPassword')}
+                >
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.primaryButton, SHADOWS.medium]}
+                  onPress={handleLoginSubmit}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <View style={styles.btnContent}>
+                      <Text style={styles.primaryButtonText}>Continue</Text>
+                      <MaterialCommunityIcons name="arrow-right" size={20} color="#FFF" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
           </View>
+
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>New to Parkify? </Text>
@@ -252,6 +314,56 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
     fontWeight: '800',
     fontSize: 15,
+  },
+
+  // Role Selection
+  roleSelectionContainer: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  titleSmall: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: COLORS.text,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  roleSubtitle: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+    textAlign: 'center',
+    marginBottom: 25,
+    lineHeight: 20,
+    paddingHorizontal: 10,
+  },
+  roleBtnGroup: {
+    width: '100%',
+    gap: 15,
+  },
+  roleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2D4057',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    width: '100%',
+  },
+  roleIconBox: {
+    width: 32,
+    alignItems: 'center',
+  },
+  roleBtnText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '800',
+    flex: 1,
+    textAlign: 'center',
+    marginRight: 32,
+  },
+  backBtn: {
+    marginTop: 25,
+    padding: 10,
   },
 });
 

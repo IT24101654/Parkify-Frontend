@@ -22,9 +22,11 @@ import { useAuth } from '../context/AuthContext';
 
 const VehicleSetupScreen = ({ navigation }) => {
   const { updateUser } = useAuth();
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [vehicleImage, setVehicleImage] = useState(null);
   const [licenseImage, setLicenseImage] = useState(null);
+  const [selectedTypes, setSelectedTypes] = useState([]);
   const [formData, setFormData] = useState({
     vehicleNumber: '',
     brand: '',
@@ -32,6 +34,14 @@ const VehicleSetupScreen = ({ navigation }) => {
     type: 'Car',
     fuelType: 'Petrol',
   });
+
+  const toggleType = (type) => {
+    if (selectedTypes.includes(type)) {
+      setSelectedTypes(selectedTypes.filter(t => t !== type));
+    } else {
+      setSelectedTypes([...selectedTypes, type]);
+    }
+  };
 
   const pickImage = async (imageType) => {
     Alert.alert(
@@ -122,6 +132,48 @@ const VehicleSetupScreen = ({ navigation }) => {
     }
   };
 
+  const renderStep1 = () => (
+    <View style={styles.card}>
+      <Text style={styles.title}>What vehicles do you have?</Text>
+      <Text style={styles.subtitle}>Select all the vehicle types you plan to use with Parkify</Text>
+      
+      <View style={styles.typeGrid}>
+        {[
+          { id: 'Car', icon: 'car' },
+          { id: 'Bike', icon: 'motorcycle' },
+          { id: 'Van', icon: 'van-utility' },
+          { id: 'Lorry', icon: 'truck' },
+        ].map((type) => (
+          <TouchableOpacity 
+            key={type.id}
+            style={[
+              styles.typeCard,
+              selectedTypes.includes(type.id) && styles.typeCardActive
+            ]}
+            onPress={() => toggleType(type.id)}
+          >
+            <MaterialCommunityIcons 
+              name={type.icon} 
+              size={40} 
+              color={selectedTypes.includes(type.id) ? '#FFF' : '#B26969'} 
+            />
+            <Text style={[
+              styles.typeLabel,
+              selectedTypes.includes(type.id) && styles.typeLabelActive
+            ]}>{type.id}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <CustomButton 
+        title="Continue to Details"
+        onPress={() => setStep(2)}
+        disabled={selectedTypes.length === 0}
+        style={{ marginTop: 20 }}
+      />
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -131,13 +183,18 @@ const VehicleSetupScreen = ({ navigation }) => {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <View style={styles.stepContainer}>
-               <Text style={styles.stepText}>Step 2 of 2</Text>
+               <Text style={styles.stepText}>Step {step} of 2</Text>
             </View>
-            <Text style={styles.title}>Vehicle Registration</Text>
-            <Text style={styles.subtitle}>Let's add your primary vehicle to get you started</Text>
+            <Text style={styles.title}>{step === 1 ? 'Vehicle Selection' : 'Vehicle Details'}</Text>
+            <Text style={styles.subtitle}>
+              {step === 1 
+                ? 'Tell us which vehicles you normally drive' 
+                : 'Now, let\'s add your primary vehicle\'s details'}
+            </Text>
           </View>
 
-          <View style={[styles.card, SHADOWS.medium]}>
+          {step === 1 ? renderStep1() : (
+            <View style={[styles.card, SHADOWS.medium]}>
             <View style={styles.imageSection}>
                <TouchableOpacity style={styles.imageBox} onPress={() => pickImage('vehicle')}>
                   {vehicleImage ? (
@@ -221,6 +278,7 @@ const VehicleSetupScreen = ({ navigation }) => {
               style={{ marginTop: 30 }}
             />
           </View>
+          )}
 
           <TouchableOpacity style={styles.skipBtn} onPress={() => handleFinish()}>
              <Text style={styles.skipText}>I'll do this later</Text>
@@ -253,6 +311,37 @@ const styles = StyleSheet.create({
   pickerTextActive: { color: '#FFF' },
   skipBtn: { marginTop: 20, alignSelf: 'center', padding: 10 },
   skipText: { color: '#7A868E', fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' },
+  
+  // Multi-step additions
+  typeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 15,
+    marginVertical: 25,
+  },
+  typeCard: {
+    width: '47%',
+    aspectRatio: 1,
+    backgroundColor: '#FAF7F4',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#F0EBE6',
+  },
+  typeCardActive: {
+    backgroundColor: '#B26969',
+    borderColor: '#B26969',
+  },
+  typeLabel: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#2D4057',
+    marginTop: 10,
+  },
+  typeLabelActive: {
+    color: '#FFF',
+  },
 });
 
 export default VehicleSetupScreen;

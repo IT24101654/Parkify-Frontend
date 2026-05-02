@@ -1,15 +1,13 @@
 {
   "expo": {
-    "name": "ParkifyApp",
+    "name": " ",
     "slug": "parkifyapp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/Parkify.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/car-icon.png",
+    "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/Parkify.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FFFFFF"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -19,8 +17,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/Parkify.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/car-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "splash": {
+        "backgroundColor": "#FFFFFF"
       }
     },
     "web": {

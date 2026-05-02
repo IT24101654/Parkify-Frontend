@@ -9,7 +9,9 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Image,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, FONTS, SIZES } from '../styles/theme';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
@@ -136,21 +138,38 @@ const LoginScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </>
             ) : showRoleSelect ? (
-              <>
-                <Text style={styles.formTitle}>Select Role</Text>
+              <View style={styles.roleSelectionContainer}>
+                <Text style={styles.formTitle}>Choose Account</Text>
                 <Text style={styles.instructionText}>
-                  Choose which role you want to log in as:
+                  Your email is linked to multiple accounts. Select which one to log in as:
                 </Text>
-                {availableRoles.map((role) => (
-                  <CustomButton
-                    key={role}
-                    title={role.replace('_', ' ')}
-                    variant="secondary"
-                    onPress={() => handleRoleSelection(role)}
-                    style={{ marginVertical: 5 }}
-                  />
-                ))}
-              </>
+                
+                <View style={styles.roleBtnGroup}>
+                  {availableRoles.map((role) => (
+                    <TouchableOpacity 
+                      key={role}
+                      style={styles.roleBtn}
+                      onPress={() => handleRoleSelection(role)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.roleIconBox}>
+                        <MaterialCommunityIcons 
+                          name={role === 'DRIVER' ? 'steering' : 'home-city'} 
+                          size={24} 
+                          color="#FFF" 
+                        />
+                      </View>
+                      <Text style={styles.roleBtnText}>
+                        {role === 'DRIVER' ? 'Driver' : 'Parking Owner'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity onPress={() => setShowRoleSelect(false)} style={styles.backBtn}>
+                  <Text style={styles.linkText}>Back to Login</Text>
+                </TouchableOpacity>
+              </View>
             ) : (
               <>
                 <Text style={styles.formTitle}>Verify OTP</Text>
@@ -236,6 +255,48 @@ const styles = StyleSheet.create({
   linkText: {
     color: COLORS.primaryCoral,
     fontWeight: '700',
+  },
+  
+  // Role Selection Styles
+  roleSelectionContainer: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  roleBtnGroup: {
+    width: '100%',
+    gap: 15,
+    marginVertical: 10,
+  },
+  roleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2D4057', // Navy Deep
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  roleIconBox: {
+    width: 32,
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  roleBtnText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '800',
+    flex: 1,
+    textAlign: 'center',
+    marginRight: 32, // Offset the icon box width to keep text centered
+  },
+  backBtn: {
+    marginTop: 20,
+    padding: 10,
   },
 });
 

@@ -7,10 +7,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#FFF' }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
       <AuthProvider>
         <AppNavigator />
-        <StatusBar style="dark" backgroundColor="#FFF" />
+        <StatusBar style="light" backgroundColor="#1E1E1E" />
       </AuthProvider>
     </GestureHandlerRootView>
   );

@@ -14,7 +14,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from '../../theme/theme';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const features = [
   { icon: 'map', title: 'Parking Place', desc: 'Real-time slot monitoring and dynamic pricing.' },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     width: '100%',
-    height: 650,
+    minHeight: Math.min(height * 0.85, 650),
   },
   overlay: {
     flex: 1,
@@ -160,7 +160,8 @@ const styles = StyleSheet.create({
   },
   heroContent: {
     padding: SPACING.xl,
-    alignItems: 'center', // Center everything
+    paddingBottom: 80, // Added padding here instead so overlay stretches fully
+    alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
   },
@@ -197,21 +198,21 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   heroTitle: {
-    fontSize: 46,
+    fontSize: width > 380 ? 46 : 38,
     fontWeight: '900',
     color: COLORS.white,
-    lineHeight: 54,
+    lineHeight: width > 380 ? 54 : 46,
     marginBottom: SPACING.md,
     textAlign: 'center',
   },
   heroTitleHighlight: {
-    color: '#AE8E82', // Updated to requested color
+    color: '#AE8E82',
   },
 
   heroSubtitle: {
-    fontSize: 17,
+    fontSize: width > 380 ? 17 : 14,
     color: 'rgba(255, 255, 255, 0.9)',
-    lineHeight: 26,
+    lineHeight: width > 380 ? 26 : 22,
     marginBottom: SPACING.xxl,
     textAlign: 'center',
     paddingHorizontal: 10,

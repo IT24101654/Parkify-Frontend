@@ -57,7 +57,7 @@ const SettingRow = ({ icon, label, value, onPress, showArrow = true, danger = fa
 
 // ── Main Screen ────────────────────────────────
 const DriverProfileScreen = ({ navigation }) => {
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [vehicleCount, setVehicleCount] = useState(0);
@@ -86,6 +86,7 @@ const DriverProfileScreen = ({ navigation }) => {
 
   useEffect(() => {
     fetchVehicleCount();
+    refreshUser();
   }, []);
 
   useEffect(() => {
@@ -93,9 +94,24 @@ const DriverProfileScreen = ({ navigation }) => {
       sidebarAnim.setValue(-width);
       setIsSidebarOpen(false);
       fetchVehicleCount();
+      refreshUser();
     });
     return unsubscribe;
   }, [navigation]);
+
+  // Sync form when user changes (after refresh)
+  useEffect(() => {
+    if (user && !isEditing) {
+      setForm({
+        name: user.name || '',
+        phoneNumber: user.phoneNumber || '',
+        address: user.address || '',
+        driverPreferences: user.driverPreferences || 'nearest',
+        active: user.active !== undefined ? user.active : true,
+        profilePicture: user.profilePicture || null,
+      });
+    }
+  }, [user]);
 
   const toggleSidebar = () => {
     const toValue = isSidebarOpen ? -width : 0;
@@ -121,6 +137,13 @@ const DriverProfileScreen = ({ navigation }) => {
     { id: 'vehicles', title: 'My Vehicles', icon: 'car-multiple' },
     { id: 'profile', title: 'My Profile', icon: 'account-circle' },
   ];
+
+  const getImageUrl = (uri) => {
+    if (!uri) return null;
+    if (uri.startsWith('http') || uri.startsWith('data:')) return uri;
+    const formattedUri = uri.replace(/\\/g, '/');
+    return `http://10.0.2.2:5000/${formattedUri}`;
+  };
 
   const fetchVehicleCount = async () => {
     try {
@@ -244,7 +267,7 @@ const DriverProfileScreen = ({ navigation }) => {
         <View style={styles.sidebarUserCard}>
           <View style={[styles.sidebarAvatar, { overflow: 'hidden' }]}>
             {user?.profilePicture ? (
-              <Image source={{ uri: user.profilePicture }} style={{ width: '100%', height: '100%' }} />
+              <Image source={{ uri: getImageUrl(user.profilePicture) }} style={{ width: '100%', height: '100%' }} />
             ) : (
               <MaterialCommunityIcons name="account" size={36} color="#FFF" />
             )}
@@ -342,7 +365,7 @@ const DriverProfileScreen = ({ navigation }) => {
           <View style={[styles.avatar, { overflow: 'hidden' }]}>
             {form.profilePicture ? (
               <Image 
-                source={{ uri: form.profilePicture }} 
+                source={{ uri: getImageUrl(form.profilePicture) }} 
                 style={{ width: '100%', height: '100%' }} 
                 resizeMode="cover"
               />
@@ -610,47 +633,47 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 0, bottom: 0,
     width: width * 0.75,
     backgroundColor: '#2D4057',
-    zIndex: 3000, padding: 25, paddingTop: 55,
+    zIndex: 3000, padding: 20, paddingTop: 40,
   },
   sidebarHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20,
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10,
   },
-  sidebarLogo: { width: 35, height: 35 },
-  sidebarBrand: { fontSize: 22, fontWeight: '900', color: '#FFF', letterSpacing: 1 },
-  sidebarUserCard: { alignItems: 'center', paddingVertical: 15, marginBottom: 10 },
+  sidebarLogo: { width: 30, height: 30 },
+  sidebarBrand: { fontSize: 20, fontWeight: '900', color: '#FFF', letterSpacing: 1 },
+  sidebarUserCard: { alignItems: 'center', paddingVertical: 2, marginBottom: 0 },
   sidebarAvatar: {
-    width: 70, height: 70, borderRadius: 35,
+    width: 50, height: 50, borderRadius: 25,
     backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: '#B26969', marginBottom: 10,
+    borderWidth: 2, borderColor: '#B26969', marginBottom: 5,
   },
-  sidebarUserName: { fontSize: 16, fontWeight: '900', color: '#FFF', letterSpacing: 0.5 },
-  sidebarUserRole: { fontSize: 12, fontWeight: '700', color: '#B26969', marginTop: 3 },
-  sidebarDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 10 },
-  sidebarMenu: { flex: 1, paddingTop: 5 },
+  sidebarUserName: { fontSize: 15, fontWeight: '900', color: '#FFF', letterSpacing: 0.5 },
+  sidebarUserRole: { fontSize: 11, fontWeight: '700', color: '#B26969', marginTop: 2 },
+  sidebarDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 8 },
+  sidebarMenu: { flex: 1, paddingTop: 0 },
   menuIconBox: {
-    width: 40, height: 40, borderRadius: 12,
+    width: 36, height: 36, borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center', alignItems: 'center',
   },
   menuIconBoxActive: { backgroundColor: '#B26969' },
   menuItem: {
-    flexDirection: 'row', alignItems: 'center', gap: 15,
-    paddingVertical: 12, paddingHorizontal: 5,
-    borderRadius: 14, marginBottom: 5,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 8, paddingHorizontal: 5,
+    borderRadius: 14, marginBottom: 0,
   },
   menuItemActive: { backgroundColor: 'rgba(178,105,105,0.15)' },
-  menuText: { fontSize: 15, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
+  menuText: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
   menuTextActive: { color: '#FFF' },
   sidebarLogout: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#B26969', paddingVertical: 14,
-    paddingHorizontal: 16, borderRadius: 14, marginTop: 5,
+    backgroundColor: '#B26969', paddingVertical: 12,
+    paddingHorizontal: 16, borderRadius: 14, marginTop: 2,
   },
-  logoutText: { fontSize: 15, fontWeight: '800', color: '#FFF' },
+  logoutText: { fontSize: 14, fontWeight: '800', color: '#FFF' },
   sidebarVersion: {
     textAlign: 'center', color: 'rgba(255,255,255,0.3)',
-    fontSize: 10, fontWeight: '600', marginTop: 12,
+    fontSize: 10, fontWeight: '600', marginTop: 10,
   },
 
   // Header

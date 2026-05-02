@@ -22,9 +22,30 @@ import VehicleListScreen from '../screens/VehicleListScreen';
 import EditVehicleScreen from '../screens/EditVehicleScreen';
 import VehicleSetupScreen from '../screens/VehicleSetupScreen';
 import DriverProfileScreen from '../screens/DriverProfileScreen';
+import ParkingSlotsScreen from '../screens/driver/ParkingSlotsScreen';
+import SelectSlotScreen from '../screens/driver/SelectSlotScreen';
+import DriverInventoryScreen from '../screens/driver/DriverInventoryScreen';
+import DriverServiceCenterScreen from '../screens/driver/DriverServiceCenterScreen';
+import ReservationScreen from '../screens/driver/ReservationScreen';
+import CheckoutPaymentScreen from '../screens/driver/CheckoutPaymentScreen';
+import DriverReservationsScreen from '../screens/driver/DriverReservationsScreen';
+import DriverPaymentsScreen from '../screens/driver/DriverPaymentsScreen';
+import ServiceAppointmentScreen from '../screens/driver/ServiceAppointmentScreen';
+import DriverServiceAppointmentsScreen from '../screens/driver/DriverServiceAppointmentsScreen';
 
 // Parking Owner Screens
 import ParkingOwnerDashboard from '../screens/ParkingOwnerDashboard';
+import ParkingOwnerProfileScreen from '../screens/ParkingOwnerProfileScreen';
+import ParkingPlaceListScreen from '../screens/parkingOwner/ParkingPlaceListScreen';
+import AddParkingPlaceScreen from '../screens/parkingOwner/AddParkingPlaceScreen';
+import ManageSlotsScreen from '../screens/parkingOwner/ManageSlotsScreen';
+import InventoryScreen from '../screens/parkingOwner/InventoryScreen';
+import ServiceCenterScreen from '../screens/parkingOwner/ServiceCenterScreen';
+import MapPickerScreen from '../screens/parkingOwner/MapPickerScreen';
+import OwnerReservationsScreen from '../screens/parkingOwner/OwnerReservationsScreen';
+import OwnerServiceAppointmentsScreen from '../screens/parkingOwner/OwnerServiceAppointmentsScreen';
+import OwnerRefundsScreen from '../screens/parkingOwner/OwnerRefundsScreen';
+import OwnerEarningsScreen from '../screens/parkingOwner/OwnerEarningsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createMaterialTopTabNavigator();
@@ -37,7 +58,7 @@ const CustomGlobalHeader = ({ state, navigation, title }) => {
     Users: 'account-group',
     Notifications: 'bell',
     Profile: 'account-circle',
-    OwnerDashboard: 'view-dashboard',
+    ParkingOwnerDashboard: 'view-dashboard',
     DriverDashboard: 'view-dashboard',
   };
 
@@ -123,14 +144,33 @@ const DriverStack = () => (
     <Stack.Screen name="VehicleList" component={VehicleListScreen} />
     <Stack.Screen name="EditVehicle" component={EditVehicleScreen} />
     <Stack.Screen name="DriverProfile" component={DriverProfileScreen} />
+    <Stack.Screen name="ParkingSlots" component={ParkingSlotsScreen} />
+    <Stack.Screen name="SelectSlot" component={SelectSlotScreen} />
+    <Stack.Screen name="DriverInventory" component={DriverInventoryScreen} />
+    <Stack.Screen name="DriverServiceCenter" component={DriverServiceCenterScreen} />
+    <Stack.Screen name="Reservation" component={ReservationScreen} />
+    <Stack.Screen name="CheckoutPayment" component={CheckoutPaymentScreen} />
+    <Stack.Screen name="DriverReservations" component={DriverReservationsScreen} />
+    <Stack.Screen name="DriverPayments" component={DriverPaymentsScreen} />
+    <Stack.Screen name="ServiceAppointment" component={ServiceAppointmentScreen} />
+    <Stack.Screen name="DriverServiceAppointments" component={DriverServiceAppointmentsScreen} />
   </Stack.Navigator>
 );
 
 const OwnerStack = () => (
-  <Stack.Navigator screenOptions={{ 
-    header: (props) => <CustomGlobalHeader {...props} />
-  }}>
-    <Stack.Screen name="OwnerDashboard" component={ParkingOwnerDashboard} />
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="ParkingOwnerDashboard" component={ParkingOwnerDashboard} />
+    <Stack.Screen name="ParkingOwnerProfile" component={ParkingOwnerProfileScreen} />
+    <Stack.Screen name="ParkingPlaceList" component={ParkingPlaceListScreen} />
+    <Stack.Screen name="AddParkingPlace" component={AddParkingPlaceScreen} />
+    <Stack.Screen name="ManageSlots" component={ManageSlotsScreen} />
+    <Stack.Screen name="Inventory" component={InventoryScreen} />
+    <Stack.Screen name="ServiceCenter" component={ServiceCenterScreen} />
+    <Stack.Screen name="MapPicker" component={MapPickerScreen} />
+    <Stack.Screen name="OwnerReservations" component={OwnerReservationsScreen} />
+    <Stack.Screen name="OwnerServiceAppointments" component={OwnerServiceAppointmentsScreen} />
+    <Stack.Screen name="OwnerRefunds" component={OwnerRefundsScreen} />
+    <Stack.Screen name="OwnerEarnings" component={OwnerEarningsScreen} />
   </Stack.Navigator>
 );
 

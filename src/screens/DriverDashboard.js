@@ -1,25 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Image,
   Dimensions,
   Animated,
-  StatusBar
+  StatusBar,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
+import { PanResponder } from 'react-native';
+import api from '../services/api';
+import VoiceAssistantWidget from '../components/VoiceAssistant/VoiceAssistantWidget';
+import VoiceWave from '../components/VoiceAssistant/VoiceWave';
 
 const { width } = Dimensions.get('window');
 
 const FeatureCard = ({ icon, title, desc, footerText, color, onPress }) => (
-  <TouchableOpacity 
-    style={[styles.featureCard, SHADOWS.medium]} 
+  <TouchableOpacity
+    style={[styles.featureCard, SHADOWS.medium]}
     onPress={onPress}
     activeOpacity={0.9}
   >
@@ -37,9 +42,90 @@ const FeatureCard = ({ icon, title, desc, footerText, color, onPress }) => (
 
 const DriverDashboard = ({ navigation }) => {
   const { user, logout } = useAuth();
-  const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [sidebarAnim] = useState(new Animated.Value(-width));
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Interactive Background State (ITP Mesh Gradient Logic)
+  const touchX = useRef(new Animated.Value(width / 2)).current;
+  const touchY = useRef(new Animated.Value(width / 2)).current;
+
+  // 4 Blobs for Mesh Effect
+  const blob1Pos = useRef(new Animated.ValueXY({ x: width * 0.2, y: 100 })).current;
+  const blob2Pos = useRef(new Animated.ValueXY({ x: width * 0.8, y: 300 })).current;
+  const blob3Pos = useRef(new Animated.ValueXY({ x: width * 0.5, y: 500 })).current;
+  const blob4Pos = useRef(new Animated.ValueXY({ x: width * 0.1, y: 700 })).current;
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderMove: (evt, gestureState) => {
+      const { moveX, moveY } = gestureState;
+
+      Animated.parallel([
+        Animated.spring(blob1Pos, { toValue: { x: moveX - 100, y: moveY - 100 }, useNativeDriver: false, friction: 8 }),
+        Animated.spring(blob2Pos, { toValue: { x: width - moveX - 150, y: width - moveY - 150 }, useNativeDriver: false, friction: 10 }),
+        Animated.spring(blob3Pos, { toValue: { x: moveX - 150, y: moveY + 100 }, useNativeDriver: false, friction: 12 }),
+        Animated.spring(blob4Pos, { toValue: { x: width - moveX + 50, y: moveY - 200 }, useNativeDriver: false, friction: 15 }),
+      ]).start();
+    }
+  });
+
+  const stopAndProcessVoice = async (finalTranscript) => {
+    if (!finalTranscript || finalTranscript.trim() === '') {
+      return;
+    }
+
+    let pref = 'BALANCED';
+    if (finalTranscript.includes('cheap') || finalTranscript.includes('price')) pref = 'CHEAPEST';
+    else if (finalTranscript.includes('near') || finalTranscript.includes('close') || finalTranscript.includes('around')) pref = 'NEAREST';
+    else if (finalTranscript.includes('available') || finalTranscript.includes('empty') || finalTranscript.includes('space')) pref = 'MOST_AVAILABLE';
+
+    let targetEntity = 'PARKING';
+    if (finalTranscript.includes('inventory') || finalTranscript.includes('shop') || finalTranscript.includes('item') || finalTranscript.includes('buy') || finalTranscript.includes('accessories')) {
+      targetEntity = 'INVENTORY';
+    } else if (finalTranscript.includes('service') || finalTranscript.includes('repair') || finalTranscript.includes('maintenance') || finalTranscript.includes('wash')) {
+      targetEntity = 'SERVICE';
+    }
+
+    try {
+      const reqPayload = { preferenceType: pref, latitude: 6.9271, longitude: 79.8612, targetEntity: targetEntity };
+
+      let bestPlace = null;
+      try {
+        const res = await api.get('/parking');
+        const places = res.data || [];
+
+        if (places.length > 0) {
+          if (pref === 'CHEAPEST') {
+            bestPlace = places.sort((a, b) => a.price - b.price)[0];
+          } else if (targetEntity === 'INVENTORY') {
+            bestPlace = places.find(p => p.hasInventory) || places[0];
+          } else if (targetEntity === 'SERVICE') {
+            bestPlace = places.find(p => p.hasServiceCenter) || places[0];
+          } else {
+            bestPlace = places[0]; // Nearest (mocked to first available)
+          }
+        }
+      } catch (e) {
+        console.log("Failed to fetch parking places for AI", e);
+      }
+
+      if (targetEntity === 'INVENTORY') {
+        navigation.navigate('ParkingSlots');
+      } else if (targetEntity === 'SERVICE') {
+        navigation.navigate('DriverServiceAppointments');
+      } else {
+        navigation.navigate('ParkingSlots', bestPlace ? { autoSelectPlace: bestPlace } : undefined);
+      }
+    } catch (err) {
+      console.error("AI Assistant Error:", err);
+    }
+  };
+
+  const onVoiceCommand = async (command) => {
+    if (!command) return;
+    await stopAndProcessVoice(command);
+  };
 
   const toggleSidebar = () => {
     const toValue = isSidebarOpen ? -width : 0;
@@ -64,21 +150,31 @@ const DriverDashboard = ({ navigation }) => {
     { id: 'overview', title: 'Overview', icon: 'view-dashboard' },
     { id: 'slots', title: 'Parking Slots', icon: 'map-marker-radius' },
     { id: 'bookings', title: 'Reservations', icon: 'book-open-variant' },
+    { id: 'services', title: 'Service Appointments', icon: 'tools' },
     { id: 'payments', title: 'Payments', icon: 'wallet' },
     { id: 'vehicles', title: 'My Vehicles', icon: 'car-multiple' },
     { id: 'profile', title: 'My Profile', icon: 'account-circle' },
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
       <StatusBar barStyle="dark-content" />
-      
+
+      {/* Interactive Background Elements (ITP Style Mesh Gradient) */}
+      <View style={styles.bgWrapper}>
+        <Animated.View style={[styles.blob, styles.blob1, { transform: blob1Pos.getTranslateTransform() }]} />
+        <Animated.View style={[styles.blob, styles.blob2, { transform: blob2Pos.getTranslateTransform() }]} />
+        <Animated.View style={[styles.blob, styles.blob3, { transform: blob3Pos.getTranslateTransform() }]} />
+        <Animated.View style={[styles.blob, styles.blob4, { transform: blob4Pos.getTranslateTransform() }]} />
+      </View>
+      <View style={styles.bgGradientOverlay} />
+
       {/* Sidebar Overlay */}
       {isSidebarOpen && (
-        <TouchableOpacity 
-          style={styles.overlay} 
-          activeOpacity={1} 
-          onPress={toggleSidebar} 
+        <TouchableOpacity
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={toggleSidebar}
         />
       )}
 
@@ -86,8 +182,8 @@ const DriverDashboard = ({ navigation }) => {
       <Animated.View style={[styles.sidebar, { left: sidebarAnim }]}>
         {/* Sidebar Header with User Info */}
         <View style={styles.sidebarHeader}>
-          <Image 
-            source={require('../../assets/Parkify.png')} 
+          <Image
+            source={require('../../assets/Parkify.png')}
             style={styles.sidebarLogo}
             resizeMode="contain"
           />
@@ -113,7 +209,10 @@ const DriverDashboard = ({ navigation }) => {
             <TouchableOpacity key={item.id} style={styles.menuItem} onPress={() => {
               toggleSidebar();
               if (item.id === 'vehicles') navigation.navigate('VehicleList');
+              else if (item.id === 'bookings') navigation.navigate('DriverReservations');
+              else if (item.id === 'payments') navigation.navigate('DriverPayments');
               else if (item.id === 'profile') navigation.navigate('DriverProfile');
+              else if (item.id === 'services') navigation.navigate('DriverServiceAppointments');
             }}>
               <View style={styles.menuIconBox}>
                 <MaterialCommunityIcons name={item.icon} size={22} color="rgba(255,255,255,0.8)" />
@@ -154,62 +253,58 @@ const DriverDashboard = ({ navigation }) => {
 
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
-           <Text style={styles.welcomeTitle}>Welcome to your Dashboard</Text>
-           <Text style={styles.welcomeName}>{user?.name || 'Driver'}</Text>
+          <Text style={styles.welcomeSubtitle}>Welcome to your Dashboard</Text>
+          <View style={styles.nameRow}>
+            <Text style={styles.welcomeTitle}>{user?.name || 'Driver'}</Text>
+            <MaterialCommunityIcons name="hand-wave" size={24} color="#ED8936" style={{ marginLeft: 10 }} />
+          </View>
+          <View style={styles.welcomeDivider} />
         </View>
 
-        {/* Voice Assistant Widget */}
-        <View style={[styles.voiceWidget, SHADOWS.medium]}>
-           <View style={styles.voiceInner}>
-              <TouchableOpacity 
-                style={[styles.micBtn, isVoiceActive && styles.micBtnActive]}
-                onPress={() => setIsVoiceActive(!isVoiceActive)}
-              >
-                <MaterialCommunityIcons name={isVoiceActive ? "microphone-off" : "microphone"} size={32} color="#FFF" />
-              </TouchableOpacity>
-              <Text style={styles.voiceLabel}>
-                {isVoiceActive ? 'Listening...' : 'Voice Assistant — Click to speak'}
-              </Text>
-              <View style={styles.tipRow}>
-                <MaterialCommunityIcons name="lightbulb-outline" size={16} color="#B08974" />
-                <Text style={styles.tipText}>Try: "Nearest parking"</Text>
-              </View>
-           </View>
-        </View>
+        {/* High Performance Voice Assistant Widget */}
+        <VoiceAssistantWidget onCommandProcessed={onVoiceCommand} />
 
         {/* Features Header */}
         <View style={styles.sectionHeader}>
-           <Text style={styles.sectionTitle}>Dashboard Features</Text>
-           <Text style={styles.sectionSubtitle}>Select a category to manage your parking experience</Text>
+          <Text style={styles.sectionTitle}>Dashboard Features</Text>
+          <Text style={styles.sectionSubtitle}>Select a category to manage your parking experience</Text>
         </View>
 
         {/* Features Grid */}
         <View style={styles.grid}>
-          <FeatureCard 
+          <FeatureCard
             icon="map-marker-radius"
             title="Parking Slots"
             desc="Find available slots"
-            footerText="Explore Now"
+            footerText="Explore Nearby"
             color="#6F7C80"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('ParkingSlots')}
           />
-          <FeatureCard 
+          <FeatureCard
             icon="book-open-variant"
             title="Reservations"
             desc="View your bookings"
             footerText="History"
             color="#B26969"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('DriverReservations')}
           />
-          <FeatureCard 
+          <FeatureCard
+            icon="tools"
+            title="Services"
+            desc="Vehicle appointments"
+            footerText="Bookings"
+            color="#C05621"
+            onPress={() => navigation.navigate('DriverServiceAppointments')}
+          />
+          <FeatureCard
             icon="wallet"
             title="Payments"
             desc="Manage your wallet"
             footerText="Secure"
             color="#7A806B"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('DriverPayments')}
           />
-          <FeatureCard 
+          <FeatureCard
             icon="car-multiple"
             title="My Vehicles"
             desc="Manage your fleet"
@@ -217,15 +312,8 @@ const DriverDashboard = ({ navigation }) => {
             color="#2D4057"
             onPress={() => navigation.navigate('VehicleList')}
           />
-          <FeatureCard 
-            icon="package-variant-closed"
-            title="Inventory"
-            desc="Browse accessories"
-            footerText="Shop"
-            color="#B08974"
-            onPress={() => {}}
-          />
-          <FeatureCard 
+
+          <FeatureCard
             icon="account-circle"
             title="My Profile"
             desc="Update your info"
@@ -272,29 +360,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'uppercase',
   },
-  welcomeSection: {
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 10,
-  },
-  welcomeTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#b26969d4',
-    textAlign: 'center',
-    letterSpacing: -0.5,
-    lineHeight: 32,
-  },
-  welcomeName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#2D4057',
-    textAlign: 'center',
-    marginTop: 2,
-    textTransform: 'uppercase',
-    paddingHorizontal: 10,
-    width: '100%',
-  },
+  // Welcome Section
+  welcomeSection: { alignItems: 'center', marginBottom: 30, marginTop: 15 },
+  welcomeSubtitle: { fontSize: 24, fontWeight: '900', color: '#B26969', letterSpacing: -0.5, textAlign: 'center' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  welcomeTitle: { fontSize: 28, fontWeight: '800', color: '#2D4057', textAlign: 'center' },
+  welcomeDivider: { width: 40, height: 3, backgroundColor: '#ED8936', borderRadius: 2, marginTop: 10, opacity: 0.8 },
   voiceWidget: {
     backgroundColor: '#FAF7F4',
     borderRadius: 24,
@@ -324,10 +395,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#B26969',
   },
   voiceLabel: {
-    fontSize: 14,
-    color: '#2D4057',
-    fontWeight: '700',
-    marginBottom: 10,
+    fontSize: 18,
+    color: '#B08974',
+    fontWeight: '800',
+    marginVertical: 10,
+    textAlign: 'center',
+    minHeight: 26,
+    fontStyle: 'italic',
   },
   tipRow: {
     flexDirection: 'row',
@@ -343,6 +417,24 @@ const styles = StyleSheet.create({
     color: '#B08974',
     fontWeight: '600',
   },
+  tipChip1: {
+    backgroundColor: 'rgba(176, 137, 116, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(176, 137, 116, 0.2)'
+  },
+  tipChipText1: { color: '#B08974', fontSize: 12, fontWeight: '600' },
+  tipChip2: {
+    backgroundColor: 'rgba(176, 137, 116, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(122, 128, 107, 0.2)'
+  },
+  tipChipText2: { color: '#7A806B', fontSize: 12, fontWeight: '600' },
   sectionHeader: {
     alignItems: 'center',
     marginBottom: 25,
@@ -425,66 +517,66 @@ const styles = StyleSheet.create({
     width: width * 0.75,
     backgroundColor: '#2D4057',
     zIndex: 3000,
-    padding: 25,
-    paddingTop: 55,
+    padding: 20,
+    paddingTop: 40,
   },
   sidebarHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   sidebarLogo: {
-    width: 35,
-    height: 35,
+    width: 30,
+    height: 30,
   },
   sidebarBrand: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
     color: '#FFF',
     letterSpacing: 1,
   },
   sidebarUserCard: {
     alignItems: 'center',
-    paddingVertical: 15,
-    marginBottom: 10,
+    paddingVertical: 2,
+    marginBottom: 0,
   },
   sidebarAvatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#B26969',
-    marginBottom: 10,
+    marginBottom: 5,
   },
   sidebarUserName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '900',
     color: '#FFF',
     letterSpacing: 0.5,
   },
   sidebarUserRole: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#B26969',
-    marginTop: 3,
+    marginTop: 2,
   },
   sidebarDivider: {
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    marginVertical: 10,
+    marginVertical: 8,
   },
   sidebarMenu: {
     flex: 1,
-    paddingTop: 5,
+    paddingTop: 0,
   },
   menuIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -492,14 +584,14 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
-    paddingVertical: 12,
+    gap: 12,
+    paddingVertical: 8,
     paddingHorizontal: 5,
     borderRadius: 14,
-    marginBottom: 5,
+    marginBottom: 0,
   },
   menuText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: 'rgba(255,255,255,0.85)',
   },
@@ -508,13 +600,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     backgroundColor: '#B26969',
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 14,
-    marginTop: 5,
+    marginTop: 2,
   },
   logoutText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: '#FFF',
   },
@@ -523,7 +615,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)',
     fontSize: 10,
     fontWeight: '600',
-    marginTop: 12,
+    marginTop: 10,
   },
   notificationBtn: {
     position: 'relative',
@@ -538,6 +630,39 @@ const styles = StyleSheet.create({
     backgroundColor: '#B26969',
     borderWidth: 1.5,
     borderColor: '#FFF',
+  },
+  bgGradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    zIndex: -1,
+  },
+  bgWrapper: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: -2,
+    backgroundColor: '#d1c9ba',
+  },
+  blob: {
+    position: 'absolute',
+    width: 350,
+    height: 350,
+    borderRadius: 175,
+    opacity: 0.5,
+  },
+  blob1: {
+    backgroundColor: '#F2C6AF', // ITP Peach
+  },
+  blob2: {
+    backgroundColor: '#BDAD9C', // ITP Sand
+  },
+  blob3: {
+    backgroundColor: '#BBC4A0', // ITP Sage
+  },
+  blob4: {
+    backgroundColor: '#99D3E4', // ITP Sky Blue
   },
 });
 

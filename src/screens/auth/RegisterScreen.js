@@ -20,11 +20,13 @@ import BackButton from '../../components/BackButton';
 import api from '../../services/api';
 
 const RegisterScreen = ({ navigation }) => {
+  const [step, setStep] = useState(1);
   const [role, setRole] = useState(null); // 'DRIVER' or 'PARKING_OWNER'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [address, setAddress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [strength, setStrength] = useState({ label: '', color: '#ddd', width: '0%' });
 
@@ -55,8 +57,8 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   const handleRegister = async () => {
-    if (!name || !email || !password || !role) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+    if (!name || !email || !password || !role || !address) {
+      Alert.alert('Error', 'Please fill in all required fields including your address.');
       return;
     }
 
@@ -67,7 +69,8 @@ const RegisterScreen = ({ navigation }) => {
         email: email.trim().toLowerCase(),
         password,
         role,
-        phoneNumber
+        phoneNumber,
+        address
       });
       
       navigation.navigate('OTPVerification', { 
@@ -103,7 +106,7 @@ const RegisterScreen = ({ navigation }) => {
           <View style={styles.roleContainer}>
             <TouchableOpacity 
               style={[styles.roleCard, SHADOWS.medium]}
-              onPress={() => setRole('DRIVER')}
+              onPress={() => { setRole('DRIVER'); setStep(2); }}
             >
               <View style={[styles.roleIconCircle, { backgroundColor: '#F9F4EE' }]}>
                 <MaterialCommunityIcons name="car-side" size={40} color="#B26969" />
@@ -114,7 +117,7 @@ const RegisterScreen = ({ navigation }) => {
 
             <TouchableOpacity 
               style={[styles.roleCard, SHADOWS.medium]}
-              onPress={() => setRole('PARKING_OWNER')}
+              onPress={() => { setRole('PARKING_OWNER'); setStep(2); }}
             >
               <View style={[styles.roleIconCircle, { backgroundColor: '#EEF4F9' }]}>
                 <MaterialCommunityIcons name="garage" size={40} color="#2D4057" />
@@ -143,7 +146,7 @@ const RegisterScreen = ({ navigation }) => {
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <BackButton onPress={() => setRole(null)} />
+          <BackButton onPress={() => { setRole(null); setStep(1); }} />
 
           <View style={styles.header}>
             <Image 
@@ -196,6 +199,20 @@ const RegisterScreen = ({ navigation }) => {
                   value={phoneNumber}
                   onChangeText={setPhoneNumber}
                   keyboardType="phone-pad"
+                  placeholderTextColor="#A0AEC0"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Physical Address</Text>
+              <View style={styles.inputWrapper}>
+                <MaterialCommunityIcons name="map-marker-outline" size={20} color="#7A868E" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="No, Street, City"
+                  value={address}
+                  onChangeText={setAddress}
                   placeholderTextColor="#A0AEC0"
                 />
               </View>
