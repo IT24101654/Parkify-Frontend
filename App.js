@@ -1,13 +1,13 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { View, Platform, StyleSheet } from 'react-native';
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#1E1E1E' }}>
+    <GestureHandlerRootView style={[styles.container, Platform.OS === 'web' && styles.webContainer]}>
       <AuthProvider>
         <AppNavigator />
         <StatusBar style="light" backgroundColor="#1E1E1E" />
@@ -15,3 +15,15 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1E1E1E',
+  },
+  webContainer: {
+    height: '100vh',
+    width: '100vw',
+    overflow: 'hidden', // Metro/React Native Web handles internal scrolling
+  }
+});

@@ -26,7 +26,9 @@
     },
     "web": {
       "favicon": "./assets/Parkify.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "display": "standalone",
+      "backgroundColor": "#121212"
     },
     "plugins": [
       "expo-font",
