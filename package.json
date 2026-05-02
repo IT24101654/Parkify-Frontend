@@ -1,12 +1,13 @@
 {
-  "name": "parkifyexpo",
+  "name": "Parkify",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build": "npx expo export --platform web"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
