@@ -4,7 +4,7 @@
     "slug": "parkifyapp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/car-icon.png",
+    "icon": "./assets/Parkify.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "backgroundColor": "#FFFFFF"
