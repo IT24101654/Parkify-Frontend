@@ -25,7 +25,8 @@
       }
     },
     "web": {
-      "favicon": "./assets/Parkify.png"
+      "favicon": "./assets/Parkify.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-font",
