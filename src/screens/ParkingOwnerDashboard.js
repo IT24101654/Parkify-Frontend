@@ -7,6 +7,8 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import ParkingOwnerSidebar from '../components/ParkingOwnerSidebar';
+
 
 const { width, height } = Dimensions.get('window');
 

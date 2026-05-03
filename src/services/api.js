@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 
 // Use your computer's actual IP address so it works on BOTH Emulator and Physical Phone
 // Actual Render Backend URL
-const PRODUCTION_URL = 'https://parkify-backend-0nwc.onrender.com/api'; 
+const PRODUCTION_URL = 'https://parkify-backend-0mwc.onrender.com/api'; 
 const LOCAL_URL = 'http://172.20.10.13:5000/api';
 
 // Safe check for Web vs Native
