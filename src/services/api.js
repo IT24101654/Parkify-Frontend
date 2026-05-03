@@ -11,7 +11,7 @@ const LOCAL_URL = 'http://172.20.10.13:5000/api';
 const isWeb = Platform.OS === 'web';
 const isProductionWeb = isWeb && typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
 
-const BASE_URL = isProductionWeb || !__DEV__
+const BASE_URL = isProductionWeb || (typeof __DEV__ !== 'undefined' && !__DEV__)
   ? PRODUCTION_URL 
   : LOCAL_URL;
 

@@ -7,7 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import api, { getImageUrl } from '../../services/api';
 import { COLORS, SHADOWS } from '../../theme/theme';
 import DriverSidebar from '../../components/DriverSidebar';
-import { Animated, Dimensions } from 'react-native';
+import { Animated } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
