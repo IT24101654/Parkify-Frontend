@@ -1,30 +1,40 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated, Easing } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Path, G, Mask, Rect } from 'react-native-svg';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 
-const AnimatedG = Animated.createAnimatedComponent(G);
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 const VoiceWave = ({ isActive }) => {
-  const transSlow = useSharedValue(0);
-  const transMed = useSharedValue(0);
-  const transFast = useSharedValue(0);
+  const transSlow = useRef(new Animated.Value(0)).current;
+  const transMed = useRef(new Animated.Value(0)).current;
+  const transFast = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isActive) {
-      transSlow.value = withRepeat(withTiming(-200, { duration: 4000, easing: Easing.linear }), -1, false);
-      transMed.value = withRepeat(withTiming(-200, { duration: 3000, easing: Easing.linear }), -1, false);
-      transFast.value = withRepeat(withTiming(-200, { duration: 2000, easing: Easing.linear }), -1, false);
+      const createAnim = (val, duration) => 
+        Animated.loop(
+          Animated.timing(val, {
+            toValue: -200,
+            duration,
+            easing: Easing.linear,
+            useNativeDriver: false, // Must be false for SVG on Web
+          })
+        );
+
+      const anims = [
+        createAnim(transSlow, 4000),
+        createAnim(transMed, 3000),
+        createAnim(transFast, 2000)
+      ];
+
+      anims.forEach(a => a.start());
+      return () => anims.forEach(a => a.stop());
     } else {
-      transSlow.value = 0;
-      transMed.value = 0;
-      transFast.value = 0;
+      transSlow.setValue(0);
+      transMed.setValue(0);
+      transFast.setValue(0);
     }
   }, [isActive]);
-
-  const styleSlow = useAnimatedStyle(() => ({ transform: [{ translateX: transSlow.value }] }));
-  const styleMed = useAnimatedStyle(() => ({ transform: [{ translateX: transMed.value }] }));
-  const styleFast = useAnimatedStyle(() => ({ transform: [{ translateX: transFast.value }] }));
 
   if (!isActive) return null;
 
@@ -48,7 +58,6 @@ const VoiceWave = ({ isActive }) => {
             <Stop offset="100%" stopColor="#9C8B7A" />
           </LinearGradient>
           
-          {/* Corrected Mask: White is visible, Black is transparent */}
           <LinearGradient id="edgeFade" x1="0%" y1="0%" x2="100%" y2="0%">
             <Stop offset="0%" stopColor="white" stopOpacity="0" />
             <Stop offset="25%" stopColor="white" stopOpacity="1" />
@@ -61,18 +70,21 @@ const VoiceWave = ({ isActive }) => {
         </Defs>
         
         <G mask="url(#waveMask)">
-          <AnimatedG style={styleSlow}>
-            <Path fill="none" stroke="url(#gradTheme1)" strokeWidth="4" opacity="0.8"
-                  d="M 0 30 Q 50 10, 100 30 T 200 30 T 300 30 T 400 30 T 500 30 T 600 30" />
-          </AnimatedG>
-          <AnimatedG style={styleFast}>
-            <Path fill="none" stroke="url(#gradTheme2)" strokeWidth="5" opacity="0.6"
-                  d="M 0 30 Q 50 50, 100 30 T 200 30 T 300 30 T 400 30 T 500 30 T 600 30" />
-          </AnimatedG>
-          <AnimatedG style={styleMed}>
-            <Path fill="none" stroke="url(#gradTheme3)" strokeWidth="3" opacity="0.9"
-                  d="M 0 30 Q 50 20, 100 30 T 200 30 T 300 30 T 400 30 T 500 30 T 600 30" />
-          </AnimatedG>
+          <AnimatedPath 
+            fill="none" stroke="url(#gradTheme1)" strokeWidth="4" opacity="0.8"
+            d="M 0 30 Q 50 10, 100 30 T 200 30 T 300 30 T 400 30 T 500 30 T 600 30"
+            style={{ transform: [{ translateX: transSlow }] }}
+          />
+          <AnimatedPath 
+            fill="none" stroke="url(#gradTheme2)" strokeWidth="5" opacity="0.6"
+            d="M 0 30 Q 50 50, 100 30 T 200 30 T 300 30 T 400 30 T 500 30 T 600 30"
+            style={{ transform: [{ translateX: transFast }] }}
+          />
+          <AnimatedPath 
+            fill="none" stroke="url(#gradTheme3)" strokeWidth="3" opacity="0.9"
+            d="M 0 30 Q 50 20, 100 30 T 200 30 T 300 30 T 400 30 T 500 30 T 600 30"
+            style={{ transform: [{ translateX: transMed }] }}
+          />
         </G>
       </Svg>
     </View>
