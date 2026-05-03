@@ -37,6 +37,11 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('DEBUG: login error details:', error);
+      if (error.response) {
+        console.log('DEBUG: error.response.data:', error.response.data);
+        console.log('DEBUG: error.response.status:', error.response.status);
+      }
       return { 
         success: false, 
         message: error.response?.data?.message || 'Login failed' 
