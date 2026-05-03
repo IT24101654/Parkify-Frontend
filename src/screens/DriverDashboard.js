@@ -48,7 +48,7 @@ const DriverDashboard = ({ navigation }) => {
   const blob4Pos = useRef(new Animated.ValueXY({ x: width * 0.8, y: 150 })).current;
 
   const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: () => true,
     onPanResponderMove: (evt, gestureState) => {
       const { moveX, moveY } = gestureState;

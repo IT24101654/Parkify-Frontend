@@ -161,7 +161,7 @@ const ParkingSlotsScreen = ({ navigation }) => {
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
         // Only allow downward swipes
         return gestureState.dy > 10;
