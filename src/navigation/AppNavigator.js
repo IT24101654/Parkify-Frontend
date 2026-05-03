@@ -37,7 +37,7 @@ const AppNavigator = () => {
   }
 
   if (loading) {
-    return null; 
+    return <SplashScreen onFinish={() => {}} />; 
   }
 
   return (
