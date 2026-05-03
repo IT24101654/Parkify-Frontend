@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-  StatusBar, ActivityIndicator, Alert, Linking
+  StatusBar, ActivityIndicator, Alert, Linking, Platform
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../../services/api';
@@ -24,17 +24,22 @@ const CheckoutPaymentScreen = ({ route, navigation }) => {
       } else {
         const { checkoutUrl } = res.data;
         if (checkoutUrl) {
-          // Open Stripe Checkout in phone's default browser
-          const supported = await Linking.canOpenURL(checkoutUrl);
-          if (supported) {
-            await Linking.openURL(checkoutUrl);
-            Alert.alert(
-              'Payment Initiated',
-              'Please complete the payment in your browser. The app will update once payment is successful.',
-              [{ text: 'OK', onPress: () => navigation.navigate('DriverReservations') }]
-            );
+          if (Platform.OS === 'web') {
+            // On web, direct redirect is more reliable
+            window.location.href = checkoutUrl;
           } else {
-            Alert.alert('Error', 'Cannot open payment page.');
+            // On native, use Linking
+            const supported = await Linking.canOpenURL(checkoutUrl);
+            if (supported) {
+              await Linking.openURL(checkoutUrl);
+              Alert.alert(
+                'Payment Initiated',
+                'Please complete the payment in your browser. The app will update once payment is successful.',
+                [{ text: 'OK', onPress: () => navigation.navigate('DriverReservations') }]
+              );
+            } else {
+              Alert.alert('Error', 'Cannot open payment page.');
+            }
           }
         }
       }
