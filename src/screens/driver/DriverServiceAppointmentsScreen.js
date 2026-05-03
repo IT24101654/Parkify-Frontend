@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, SafeAreaView, StatusBar, Alert
+  ActivityIndicator, SafeAreaView, StatusBar, Alert, Platform
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../../services/api';
@@ -28,17 +28,28 @@ const DriverServiceAppointmentsScreen = ({ navigation, route }) => {
   }, [fetchAppointments]);
 
   const handleCancel = (id, bookingId) => {
-    Alert.alert('Cancel Appointment', `Are you sure you want to cancel appointment #${bookingId}?`, [
-      { text: 'No', style: 'cancel' },
-      { text: 'Yes, Cancel', style: 'destructive', onPress: async () => {
-        try {
-          await api.patch(`/service-appointments/${id}/cancel`);
-          fetchAppointments();
-        } catch (error) {
-          Alert.alert('Error', 'Failed to cancel appointment');
-        }
-      }}
-    ]);
+    const cancelAction = async () => {
+      try {
+        console.log(`DEBUG: Attempting to cancel appointment ID: ${id} (#${bookingId})`);
+        const res = await api.patch(`/service-appointments/${id}/cancel`);
+        console.log('DEBUG: Cancellation response:', res.data);
+        fetchAppointments();
+      } catch (error) {
+        console.error('DEBUG: Cancellation Error:', error.response?.data || error.message);
+        Alert.alert('Error', error.response?.data?.error || 'Failed to cancel appointment');
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Are you sure you want to cancel appointment #${bookingId}?`)) {
+        cancelAction();
+      }
+    } else {
+      Alert.alert('Cancel Appointment', `Are you sure you want to cancel appointment #${bookingId}?`, [
+        { text: 'No', style: 'cancel' },
+        { text: 'Yes, Cancel', style: 'destructive', onPress: cancelAction }
+      ]);
+    }
   };
 
   const getStatusBadge = (status) => {
