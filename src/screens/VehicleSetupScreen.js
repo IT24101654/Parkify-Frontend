@@ -44,6 +44,11 @@ const VehicleSetupScreen = ({ navigation }) => {
   };
 
   const pickImage = async (imageType) => {
+    if (Platform.OS === 'web') {
+      handleImageSource(imageType, 'gallery');
+      return;
+    }
+
     Alert.alert(
       'Upload Document',
       `Select source for ${imageType === 'vehicle' ? 'Vehicle Photo' : 'Revenue License'}`,
@@ -97,21 +102,33 @@ const VehicleSetupScreen = ({ navigation }) => {
       data.append('fuelType', formData.fuelType);
 
       if (vehicleImage) {
-        const extension = vehicleImage.split('.').pop().toLowerCase();
-        data.append('vehicleImage', {
-          uri: Platform.OS === 'android' ? vehicleImage : vehicleImage.replace('file://', ''),
-          name: `v_${Date.now()}.${extension}`,
-          type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
-        });
+        if (Platform.OS === 'web') {
+          const response = await fetch(vehicleImage);
+          const blob = await response.blob();
+          data.append('vehicleImage', blob, `v_${Date.now()}.jpg`);
+        } else {
+          const extension = vehicleImage.split('.').pop().toLowerCase();
+          data.append('vehicleImage', {
+            uri: Platform.OS === 'android' ? vehicleImage : vehicleImage.replace('file://', ''),
+            name: `v_${Date.now()}.${extension}`,
+            type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
+          });
+        }
       }
 
       if (licenseImage) {
-        const extension = licenseImage.split('.').pop().toLowerCase();
-        data.append('licenseImage', {
-          uri: Platform.OS === 'android' ? licenseImage : licenseImage.replace('file://', ''),
-          name: `l_${Date.now()}.${extension}`,
-          type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
-        });
+        if (Platform.OS === 'web') {
+          const response = await fetch(licenseImage);
+          const blob = await response.blob();
+          data.append('licenseImage', blob, `l_${Date.now()}.jpg`);
+        } else {
+          const extension = licenseImage.split('.').pop().toLowerCase();
+          data.append('licenseImage', {
+            uri: Platform.OS === 'android' ? licenseImage : licenseImage.replace('file://', ''),
+            name: `l_${Date.now()}.${extension}`,
+            type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
+          });
+        }
       }
 
       await api.post('/vehicles', data, {
