@@ -61,7 +61,6 @@ const OTPVerificationScreen = ({ route, navigation }) => {
       return;
     }
 
-    console.log(`DEBUG: Verifying ${type} OTP for ${email}...`);
     setIsLoading(true);
     try {
       if (type === 'REGISTER') {
@@ -70,26 +69,19 @@ const OTPVerificationScreen = ({ route, navigation }) => {
           otp: otpCode,
           role
         });
-        console.log('DEBUG: Register OTP success');
         
         if (response.data.token) {
           await registerSuccess(response.data.user, response.data.token);
         }
       } else {
-        console.log('DEBUG: Calling login in AuthContext...');
         const result = await login(email, password, otpCode, role);
-        console.log('DEBUG: Login result:', result);
         if (!result.success) {
           Alert.alert('Verification Failed', result.message);
-        } else {
-          console.log('DEBUG: Login success, waiting for navigation...');
         }
       }
     } catch (error) {
-      console.error('DEBUG: OTP Verification error:', error);
       Alert.alert('Error', error.response?.data?.message || 'Verification failed');
     } finally {
-      console.log('DEBUG: OTP Verification finished');
       setIsLoading(false);
     }
   };

@@ -15,9 +15,25 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import * as Location from 'expo-location';
+import VoiceAssistantWidget from '../components/VoiceAssistant/VoiceAssistantWidget';
 import DriverSidebar from '../components/DriverSidebar';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+// Haversine formula for smart voice command distance calculation
+const getDistanceKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 const FeatureCard = ({ icon, title, desc, footerText, color, onPress }) => (
   <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.7}>
@@ -48,6 +64,94 @@ const DriverDashboard = ({ navigation }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const onVoiceCommand = async (command) => {
+    console.log('Smart Voice command received:', command);
+    const cmd = command.toLowerCase();
+
+    // 1. Basic Navigation
+    if (cmd.includes('reservation') || cmd.includes('history')) {
+      navigation.navigate('DriverReservations');
+      return;
+    }
+    if (cmd.includes('payment') || cmd.includes('wallet')) {
+      navigation.navigate('DriverPayments');
+      return;
+    }
+    if (cmd.includes('vehicle') || cmd.includes('car')) {
+      navigation.navigate('VehicleList');
+      return;
+    }
+
+    // 2. Smart Parking Search
+    try {
+      const res = await api.get('/parking');
+      let places = (res.data || []).filter(p => p.status === 'ACTIVE');
+
+      if (places.length === 0) {
+        navigation.navigate('ParkingSlots');
+        return;
+      }
+
+      let bestMatch = null;
+      
+      // Get user location for distance-based sorting
+      let userLat, userLon;
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const loc = await Location.getCurrentPositionAsync({});
+        userLat = loc.coords.latitude;
+        userLon = loc.coords.longitude;
+      }
+
+      if (cmd.includes('cheap')) {
+        bestMatch = places.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
+      } 
+      else if (cmd.includes('inventory') || cmd.includes('shop') || cmd.includes('item') || cmd.includes('part')) {
+        const withInv = places.filter(p => p.hasInventory);
+        if (withInv.length > 0 && userLat) {
+          bestMatch = withInv.sort((a, b) => {
+            const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
+            const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
+            return dA - dB;
+          })[0];
+        } else if (withInv.length > 0) {
+          bestMatch = withInv[0];
+        }
+      }
+      else if (cmd.includes('service') || cmd.includes('center') || cmd.includes('wash') || cmd.includes('repair')) {
+        const withService = places.filter(p => p.hasServiceCenter);
+        if (withService.length > 0 && userLat) {
+          bestMatch = withService.sort((a, b) => {
+            const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
+            const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
+            return dA - dB;
+          })[0];
+        } else if (withService.length > 0) {
+          bestMatch = withService[0];
+        }
+      }
+      else if (cmd.includes('available') || cmd.includes('free') || cmd.includes('slot') || cmd.includes('space')) {
+        bestMatch = places.sort((a, b) => b.slots - a.slots)[0];
+      }
+      else if ((cmd.includes('near') || cmd.includes('close')) && userLat) {
+        bestMatch = places.sort((a, b) => {
+          const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
+          const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
+          return dA - dB;
+        })[0];
+      }
+
+      if (bestMatch) {
+        navigation.navigate('ParkingSlots', { autoSelectPlace: bestMatch });
+      } else {
+        navigation.navigate('ParkingSlots');
+      }
+    } catch (error) {
+      console.error('Voice search error:', error);
+      navigation.navigate('ParkingSlots');
+    }
+  };
+
   const getImageUrl = (uri) => {
     if (!uri) return null;
     if (uri.startsWith('http') || uri.startsWith('data:')) return uri;
@@ -59,6 +163,14 @@ const DriverDashboard = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
+
+      {/* Static Background Mesh (Safe Version) */}
+      <View style={styles.bgWrapper}>
+        <View style={[styles.blob, styles.blob1, { top: 100, left: -50 }]} />
+        <View style={[styles.blob, styles.blob2, { top: 400, right: -50 }]} />
+        <View style={[styles.blob, styles.blob3, { bottom: 100, left: 50 }]} />
+      </View>
+      <View style={styles.bgGradientOverlay} />
 
       <DriverSidebar 
         isSidebarOpen={isSidebarOpen} 
@@ -95,6 +207,15 @@ const DriverDashboard = ({ navigation }) => {
               <MaterialCommunityIcons name="hand-wave" size={24} color="#ED8936" style={{ marginLeft: 10 }} />
             </View>
             <View style={styles.welcomeDivider} />
+          </View>
+
+          {/* High Performance Voice Assistant Widget */}
+          <VoiceAssistantWidget onCommandProcessed={onVoiceCommand} />
+
+          {/* Features Header */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Dashboard Features</Text>
+            <Text style={styles.sectionSubtitle}>Select a category to manage your parking experience</Text>
           </View>
 
           <View style={styles.grid}>
@@ -177,6 +298,16 @@ const styles = StyleSheet.create({
   fcFooterText: { fontSize: 10, color: '#9C8C79', fontWeight: '700', textTransform: 'uppercase' },
   notificationBtn: { position: 'relative' },
   notificationDot: { position: 'absolute', top: 0, right: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#B26969', borderWidth: 1.5, borderColor: '#FFF' },
+  // Background Mesh Styles
+  bgWrapper: { ...StyleSheet.absoluteFillObject, zIndex: -2, backgroundColor: '#fdfcfb' },
+  bgGradientOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255, 255, 255, 0.85)', zIndex: -1 },
+  blob: { position: 'absolute', width: 300, height: 300, borderRadius: 150, opacity: 0.4 },
+  blob1: { backgroundColor: '#F2C6AF' },
+  blob2: { backgroundColor: '#BDAD9C' },
+  blob3: { backgroundColor: '#BBC4A0' },
+  sectionHeader: { alignItems: 'center', marginBottom: 25, marginTop: 10 },
+  sectionTitle: { fontSize: 26, fontWeight: '800', color: '#B08974', textAlign: 'center', letterSpacing: -0.5, marginBottom: 6 },
+  sectionSubtitle: { fontSize: 14, color: '#9C8C79', fontWeight: '600', textAlign: 'center', lineHeight: 20 },
 });
 
 export default DriverDashboard;
