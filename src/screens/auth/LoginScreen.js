@@ -58,7 +58,10 @@ const LoginScreen = ({ navigation }) => {
           if (norm === 'SUPER_ADMIN') return 'SUPER_ADMIN';
           return 'PARKING_OWNER';
         });
-        setAvailableRoles([...new Set(displayRoles)]);
+        
+        // Deduplicate
+        const uniqueRoles = [...new Set(displayRoles)];
+        setAvailableRoles(uniqueRoles);
         
         // If it's a priority Super Admin login (mapped to single role in backend bypass)
         if (roles.length === 1 && roles[0] === 'SUPER_ADMIN') {
@@ -143,13 +146,19 @@ const LoginScreen = ({ navigation }) => {
                     >
                       <View style={styles.roleIconBox}>
                         <MaterialCommunityIcons 
-                          name={role === 'DRIVER' ? 'steering' : 'home-city'} 
+                          name={
+                            role === 'DRIVER' ? 'steering' : 
+                            role === 'SUPER_ADMIN' ? 'shield-account' : 'home-city'
+                          } 
                           size={24} 
                           color="#FFF" 
                         />
                       </View>
                       <Text style={styles.roleBtnText}>
-                        {role === 'DRIVER' ? 'Driver' : 'Parking Owner'}
+                        {
+                          role === 'DRIVER' ? 'Driver' : 
+                          role === 'SUPER_ADMIN' ? 'System Admin' : 'Parking Owner'
+                        }
                       </Text>
                     </TouchableOpacity>
                   ))}
