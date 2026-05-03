@@ -333,6 +333,9 @@ const styles = StyleSheet.create({
   menuItemActive: { backgroundColor: 'rgba(178,105,105,0.15)' },
   menuText: { fontSize: 15, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
   menuTextActive: { color: '#FFF' },
+  sidebarLogout: {
+    flexDirection: 'row', alignItems: 'center', gap: 15,
+    backgroundColor: '#B26969', paddingVertical: 12,
     paddingHorizontal: 16, borderRadius: 14, marginTop: 'auto', marginBottom: 5,
   },
   logoutText: { fontSize: 15, fontWeight: '800', color: '#FFF' },

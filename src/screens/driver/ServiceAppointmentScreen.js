@@ -200,7 +200,7 @@ const ServiceAppointmentScreen = ({ route, navigation }) => {
             <Text style={styles.dateText}>{form.serviceDate.toISOString().split('T')[0]}</Text>
           </TouchableOpacity>
           
-          {showDatePicker && (
+          {showDatePicker && Platform.OS !== 'web' && (
             <DateTimePicker
               value={form.serviceDate}
               mode="date"
@@ -208,6 +208,26 @@ const ServiceAppointmentScreen = ({ route, navigation }) => {
               minimumDate={new Date()}
               onChange={handleDateChange}
             />
+          )}
+
+          {Platform.OS === 'web' && (
+            <View style={{ marginTop: 10 }}>
+              <input
+                type="date"
+                min={new Date().toISOString().split('T')[0]}
+                value={form.serviceDate.toISOString().split('T')[0]}
+                onChange={(e) => setForm({ ...form, serviceDate: new Date(e.target.value) })}
+                style={{
+                  width: '100%',
+                  height: 45,
+                  borderRadius: 10,
+                  border: '1px solid #EDF2F7',
+                  padding: '0 10px',
+                  fontSize: '16px',
+                  backgroundColor: '#F8F9FA'
+                }}
+              />
+            </View>
           )}
 
           {/* Time Slots */}

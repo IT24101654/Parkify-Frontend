@@ -813,6 +813,54 @@ const styles = StyleSheet.create({
   settingLabelDanger: { color: '#B26969' },
   settingValue: { fontSize: 12, color: '#7A868E', marginTop: 2 },
 
+  // Sidebar Styles
+  overlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 2000,
+  },
+  sidebar: {
+    position: 'absolute', top: 0, bottom: 0,
+    width: width * 0.75, backgroundColor: '#2D4057',
+    zIndex: 3000, padding: 25, paddingTop: 55, paddingBottom: 30,
+  },
+  sidebarHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20,
+  },
+  sidebarLogo: { width: 35, height: 35 },
+  sidebarBrand: { fontSize: 22, fontWeight: '900', color: '#FFF', letterSpacing: 1 },
+  sidebarUserCard: { alignItems: 'center', paddingVertical: 15, marginBottom: 10 },
+  sidebarAvatar: {
+    width: 70, height: 70, borderRadius: 35,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: '#B26969', marginBottom: 10,
+  },
+  sidebarUserName: { fontSize: 16, fontWeight: '900', color: '#FFF', letterSpacing: 0.5 },
+  sidebarUserRole: { fontSize: 12, fontWeight: '700', color: '#B26969', marginTop: 3 },
+  sidebarDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 10 },
+  sidebarMenu: { flex: 1, paddingTop: 5 },
+  menuIconBox: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  menuItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 15,
+    paddingVertical: 12, paddingHorizontal: 5,
+    borderRadius: 14, marginBottom: 5,
+  },
+  menuText: { fontSize: 15, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
+  sidebarLogout: {
+    flexDirection: 'row', alignItems: 'center', gap: 15,
+    backgroundColor: '#B26969', paddingVertical: 12,
+    paddingHorizontal: 16, borderRadius: 14, marginTop: 'auto', marginBottom: 5,
+  },
+  logoutText: { fontSize: 15, fontWeight: '800', color: '#FFF' },
+  sidebarVersion: {
+    textAlign: 'center', color: 'rgba(255,255,255,0.3)',
+    fontSize: 10, fontWeight: '600', marginTop: 12,
+  },
+
   // Modal Styles
   modalOverlay: {
     flex: 1,
