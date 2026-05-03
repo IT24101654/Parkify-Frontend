@@ -90,7 +90,11 @@ const LoginScreen = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent} 
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <BackButton onPress={() => navigation.goBack()} />
           <View style={styles.header}>
             <Image 
@@ -165,6 +169,8 @@ const LoginScreen = ({ navigation }) => {
                       onChangeText={setPassword}
                       secureTextEntry={true}
                       textContentType="password"
+                      autoComplete="off"
+                      autoCorrect={false}
                       placeholderTextColor="#A0AEC0"
                     />
                   </View>
