@@ -184,8 +184,25 @@ const ParkingSlotsScreen = ({ navigation }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    const baseUrl = api.defaults.baseURL.replace('/api', '');
-    return `${baseUrl}/uploads/parking-photos/${imagePath}`;
+
+    let baseUrl = api.defaults.baseURL;
+    if (baseUrl.endsWith('/api')) {
+      baseUrl = baseUrl.slice(0, -4);
+    } else if (baseUrl.endsWith('/api/')) {
+      baseUrl = baseUrl.slice(0, -5);
+    }
+
+    // Parking images are in uploads/parking-photos/
+    // If the imagePath already contains the folder, use it, otherwise prepend
+    const cleanPath = imagePath.replace(/\\/g, '/');
+    const finalPath = cleanPath.includes('uploads/') 
+      ? cleanPath 
+      : `uploads/parking-photos/${cleanPath}`;
+    
+    // Avoid double slashes
+    const pathPart = finalPath.startsWith('/') ? finalPath.slice(1) : finalPath;
+    
+    return `${baseUrl}/${pathPart}`;
   };
 
   const [failedImages, setFailedImages] = useState({});
