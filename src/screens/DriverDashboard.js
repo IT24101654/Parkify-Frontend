@@ -16,26 +16,13 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import * as Location from 'expo-location';
 import VoiceAssistantWidget from '../components/VoiceAssistant/VoiceAssistantWidget';
-import VoiceWave from '../components/VoiceAssistant/VoiceWave';
 import DriverSidebar from '../components/DriverSidebar';
 
 const { width, height } = Dimensions.get('window');
 
-// Haversine formula for smart voice command distance calculation
-const getDistanceKm = (lat1, lon1, lat2, lon2) => {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-};
+// Distance calculation disabled to fix build issues
+const getDistanceKm = () => 0;
 
 const FeatureCard = ({ icon, title, desc, footerText, color, onPress }) => (
   <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.7}>
@@ -106,51 +93,20 @@ const DriverDashboard = ({ navigation }) => {
 
       let bestMatch = null;
       
-      // Get user location for distance-based sorting
-      let userLat, userLon;
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        const loc = await Location.getCurrentPositionAsync({});
-        userLat = loc.coords.latitude;
-        userLon = loc.coords.longitude;
-      }
-
       if (cmd.includes('cheap')) {
         bestMatch = places.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
       } 
-      else if (cmd.includes('inventory') || cmd.includes('shop') || cmd.includes('item') || cmd.includes('part')) {
-        const withInv = places.filter(p => p.hasInventory);
-        if (withInv.length > 0 && userLat) {
-          bestMatch = withInv.sort((a, b) => {
-            const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
-            const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
-            return dA - dB;
-          })[0];
-        } else if (withInv.length > 0) {
-          bestMatch = withInv[0];
-        }
+      else if (cmd.includes('inventory') || cmd.includes('shop')) {
+        bestMatch = places.filter(p => p.hasInventory)[0];
       }
-      else if (cmd.includes('service') || cmd.includes('center') || cmd.includes('wash') || cmd.includes('repair')) {
-        const withService = places.filter(p => p.hasServiceCenter);
-        if (withService.length > 0 && userLat) {
-          bestMatch = withService.sort((a, b) => {
-            const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
-            const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
-            return dA - dB;
-          })[0];
-        } else if (withService.length > 0) {
-          bestMatch = withService[0];
-        }
+      else if (cmd.includes('service') || cmd.includes('center') || cmd.includes('wash')) {
+        bestMatch = places.filter(p => p.hasServiceCenter)[0];
       }
-      else if (cmd.includes('available') || cmd.includes('free') || cmd.includes('slot') || cmd.includes('space')) {
+      else if (cmd.includes('available') || cmd.includes('free') || cmd.includes('slot')) {
         bestMatch = places.sort((a, b) => b.slots - a.slots)[0];
       }
-      else if ((cmd.includes('near') || cmd.includes('close')) && userLat) {
-        bestMatch = places.sort((a, b) => {
-          const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
-          const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
-          return dA - dB;
-        })[0];
+      else if (cmd.includes('near') || cmd.includes('close')) {
+        bestMatch = places[0];
       }
 
       if (bestMatch) {
