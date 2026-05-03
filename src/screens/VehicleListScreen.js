@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 0, bottom: 0,
     width: width * 0.75,
     backgroundColor: '#2D4057',
-    zIndex: 3000, padding: 25, paddingTop: 55,
+    zIndex: 3000, padding: 25, paddingTop: 55, paddingBottom: 30,
   },
   sidebarHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20,
@@ -318,10 +318,7 @@ const styles = StyleSheet.create({
   menuItemActive: { backgroundColor: 'rgba(178,105,105,0.15)' },
   menuText: { fontSize: 15, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
   menuTextActive: { color: '#FFF' },
-  sidebarLogout: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#B26969', paddingVertical: 14,
-    paddingHorizontal: 16, borderRadius: 14, marginTop: 5,
+    paddingHorizontal: 16, borderRadius: 14, marginTop: 'auto', marginBottom: 5,
   },
   logoutText: { fontSize: 15, fontWeight: '800', color: '#FFF' },
   sidebarVersion: {
