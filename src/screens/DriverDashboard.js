@@ -16,11 +16,26 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import * as Location from 'expo-location';
 import VoiceAssistantWidget from '../components/VoiceAssistant/VoiceAssistantWidget';
 import VoiceWave from '../components/VoiceAssistant/VoiceWave';
 import DriverSidebar from '../components/DriverSidebar';
 
 const { width, height } = Dimensions.get('window');
+
+// Haversine formula for smart voice command distance calculation
+const getDistanceKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 const FeatureCard = ({ icon, title, desc, footerText, color, onPress }) => (
   <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.7}>
@@ -81,24 +96,76 @@ const DriverDashboard = ({ navigation }) => {
     return `${baseUrl}/${formattedUri}`;
   };
 
-  const onVoiceCommand = (command) => {
-    console.log('Voice command received:', command);
+    }
+  };
+
+  const onVoiceCommand = async (command) => {
+    console.log('Smart Voice command received:', command);
     const cmd = command.toLowerCase();
 
-    if (cmd.includes('parking') || cmd.includes('slot') || cmd.includes('book')) {
-      navigation.navigate('ParkingSlots');
-    } else if (cmd.includes('service') || cmd.includes('appointment') || cmd.includes('wash')) {
-      navigation.navigate('DriverServiceAppointments');
-    } else if (cmd.includes('reservation') || cmd.includes('history') || cmd.includes('my book')) {
+    // 1. Basic Navigation
+    if (cmd.includes('reservation') || cmd.includes('history')) {
       navigation.navigate('DriverReservations');
-    } else if (cmd.includes('payment') || cmd.includes('wallet') || cmd.includes('money')) {
+      return;
+    }
+    if (cmd.includes('payment') || cmd.includes('wallet')) {
       navigation.navigate('DriverPayments');
-    } else if (cmd.includes('vehicle') || cmd.includes('car')) {
+      return;
+    }
+    if (cmd.includes('vehicle') || cmd.includes('car')) {
       navigation.navigate('VehicleList');
-    } else if (cmd.includes('profile') || cmd.includes('setting') || cmd.includes('me')) {
-      navigation.navigate('DriverProfile');
-    } else if (cmd.includes('inventory') || cmd.includes('shop') || cmd.includes('find item')) {
-      navigation.navigate('ParkingSlots'); // Drivers find inventory at parking locations
+      return;
+    }
+
+    // 2. Smart Parking Search (Cheapest / Nearest)
+    if (cmd.includes('parking') || cmd.includes('slot') || cmd.includes('book')) {
+      try {
+        const res = await api.get('/parking');
+        let places = (res.data || []).filter(p => p.status === 'ACTIVE');
+
+        if (places.length === 0) {
+          navigation.navigate('ParkingSlots');
+          return;
+        }
+
+        let bestMatch = null;
+
+        if (cmd.includes('cheap')) {
+          // Sort by price
+          bestMatch = places.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
+        } else if (cmd.includes('near') || cmd.includes('close')) {
+          // Get user location first
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const loc = await Location.getCurrentPositionAsync({});
+            const userLat = loc.coords.latitude;
+            const userLon = loc.coords.longitude;
+            
+            bestMatch = places.sort((a, b) => {
+              const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
+              const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
+              return dA - dB;
+            })[0];
+          }
+        }
+
+        if (bestMatch) {
+          navigation.navigate('ParkingSlots', { autoSelectPlace: bestMatch });
+        } else {
+          navigation.navigate('ParkingSlots');
+        }
+      } catch (error) {
+        console.error('Voice search error:', error);
+        navigation.navigate('ParkingSlots');
+      }
+      return;
+    }
+
+    // Fallback navigation
+    if (cmd.includes('service') || cmd.includes('appointment')) {
+      navigation.navigate('DriverServiceAppointments');
+    } else if (cmd.includes('inventory') || cmd.includes('shop')) {
+      navigation.navigate('ParkingSlots');
     }
   };
 

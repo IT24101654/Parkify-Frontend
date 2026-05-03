@@ -8,7 +8,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import ParkingOwnerSidebar from '../components/ParkingOwnerSidebar';
-import VoiceAssistantWidget from '../components/VoiceAssistant/VoiceAssistantWidget';
 
 
 const { width, height } = Dimensions.get('window');
@@ -63,27 +62,6 @@ const ParkingOwnerDashboard = ({ navigation }) => {
     }
   };
 
-  const onVoiceCommand = (command) => {
-    console.log('Voice command received:', command);
-    const cmd = command.toLowerCase();
-
-    if (cmd.includes('parking') || cmd.includes('place') || cmd.includes('slot')) {
-      navigation.navigate('ParkingPlaceList');
-    } else if (cmd.includes('inventory') || cmd.includes('shop') || cmd.includes('stock')) {
-      navigation.navigate('Inventory');
-    } else if (cmd.includes('service') || cmd.includes('center')) {
-      navigation.navigate('ServiceCenter');
-    } else if (cmd.includes('reservation') || cmd.includes('history')) {
-      navigation.navigate('OwnerReservations');
-    } else if (cmd.includes('appointment') || cmd.includes('booking')) {
-      navigation.navigate('OwnerServiceAppointments');
-    } else if (cmd.includes('profile') || cmd.includes('setting') || cmd.includes('me')) {
-      navigation.navigate('ParkingOwnerProfile');
-    } else if (cmd.includes('earning') || cmd.includes('money') || cmd.includes('cash')) {
-      navigation.navigate('OwnerEarnings');
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
@@ -129,9 +107,6 @@ const ParkingOwnerDashboard = ({ navigation }) => {
             </View>
             <View style={styles.welcomeDivider} />
           </View>
-
-          {/* High Performance Voice Assistant Widget */}
-          <VoiceAssistantWidget onCommandProcessed={onVoiceCommand} />
 
           {/* Feature Grid */}
           <View style={styles.grid}>
