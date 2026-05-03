@@ -51,19 +51,13 @@ const LoginScreen = ({ navigation }) => {
           type: 'LOGIN' 
         });
       } else if (status === 'ROLE_SELECTION_REQUIRED') {
-        // Aggressive normalization to avoid duplicate buttons (OWNER vs PARKING_OWNER)
-        const normalizedRoles = roles.map(r => r.trim().toUpperCase());
-        const filteredRoles = [];
-        normalizedRoles.forEach(role => {
-          if (role === 'DRIVER' && !filteredRoles.includes('DRIVER')) {
-            filteredRoles.push('DRIVER');
-          } else if ((role === 'PARKING_OWNER' || role === 'OWNER' || role === 'PARKING OWNER') && !filteredRoles.includes('PARKING_OWNER')) {
-            filteredRoles.push('PARKING_OWNER');
-          } else if (role && !filteredRoles.includes(role)) {
-            filteredRoles.push(role);
-          }
+        // Ultimate deduplication: Map everything to either DRIVER or PARKING_OWNER
+        const displayRoles = roles.map(r => {
+          const norm = r.trim().toUpperCase();
+          if (norm === 'DRIVER') return 'DRIVER';
+          return 'PARKING_OWNER';
         });
-        setAvailableRoles(filteredRoles);
+        setAvailableRoles([...new Set(displayRoles)]);
         setShowRoleSelect(true);
       }
     } catch (error) {
