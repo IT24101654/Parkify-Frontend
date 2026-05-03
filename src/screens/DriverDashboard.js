@@ -527,6 +527,7 @@ const styles = StyleSheet.create({
     zIndex: 3000,
     padding: 20,
     paddingTop: 40,
+    paddingBottom: 30,
   },
   sidebarHeader: {
     flexDirection: 'row',
@@ -611,7 +612,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 14,
-    marginTop: 2,
+    marginTop: 'auto',
+    marginBottom: 5,
   },
   logoutText: {
     fontSize: 14,
