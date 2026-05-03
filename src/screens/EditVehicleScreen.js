@@ -50,15 +50,16 @@ const EditVehicleScreen = ({ route, navigation }) => {
       });
 
       // Format images from server
+      const baseUrl = api.defaults.baseURL.replace('/api', '');
       if (vehicle.vehicleImage) {
         setVehicleImage(vehicle.vehicleImage.startsWith('http')
           ? vehicle.vehicleImage
-          : `http://10.0.2.2:5000/${vehicle.vehicleImage.replace(/\\/g, '/')}`);
+          : `${baseUrl}/${vehicle.vehicleImage.replace(/\\/g, '/')}`);
       }
       if (vehicle.licenseImage) {
         setLicenseImage(vehicle.licenseImage.startsWith('http')
           ? vehicle.licenseImage
-          : `http://10.0.2.2:5000/${vehicle.licenseImage.replace(/\\/g, '/')}`);
+          : `${baseUrl}/${vehicle.licenseImage.replace(/\\/g, '/')}`);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch vehicle details');
@@ -178,9 +179,15 @@ const EditVehicleScreen = ({ route, navigation }) => {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.headerTitleRow}>
-            <Text style={styles.headerTitle}>Edit Vehicle</Text>
-            <Text style={styles.headerSubtitle}>Update your vehicle information</Text>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <MaterialCommunityIcons name="arrow-left" size={28} color="#2D4057" />
+            </TouchableOpacity>
+            <View style={styles.headerCenter}>
+              <Text style={styles.headerTitle}>Edit Vehicle</Text>
+              <Text style={styles.headerSubtitle}>Update your vehicle information</Text>
+            </View>
+            <View style={{ width: 28 }} />
           </View>
 
           <View style={[styles.formCard, SHADOWS.medium]}>
@@ -267,7 +274,9 @@ const EditVehicleScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
   scrollContent: { padding: 20 },
-  headerTitleRow: { alignItems: 'center', marginBottom: 25 },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 25 },
+  backBtn: { padding: 4 },
+  headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { fontSize: 24, fontWeight: '900', color: '#2D4057' },
   headerSubtitle: { fontSize: 14, color: '#7A868E', marginTop: 4 },
   formCard: { backgroundColor: '#FFF', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#F0F0F0' },

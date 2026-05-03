@@ -102,6 +102,14 @@ const AdminProfile = ({ navigation }) => {
     </View>
   );
 
+  const getImageUrl = (uri) => {
+    if (!uri) return null;
+    if (uri.startsWith('http') || uri.startsWith('data:')) return uri;
+    const formattedUri = uri.replace(/\\/g, '/');
+    const baseUrl = api.defaults.baseURL.replace('/api', '');
+    return `${baseUrl}/${formattedUri}`;
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -118,7 +126,7 @@ const AdminProfile = ({ navigation }) => {
         <View style={styles.avatarSection}>
           <View style={[styles.avatarContainer, SHADOWS.medium]}>
             {profile.profilePicture ? (
-              <Image source={{ uri: profile.profilePicture }} style={styles.avatarImage} />
+              <Image source={{ uri: getImageUrl(profile.profilePicture) }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarCircle}>
                 <Text style={styles.avatarInitial}>{profile.name.charAt(0).toUpperCase()}</Text>

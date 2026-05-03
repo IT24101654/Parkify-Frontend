@@ -126,7 +126,8 @@ const ParkingOwnerProfileScreen = ({ navigation }) => {
     if (!uri) return null;
     if (uri.startsWith('http') || uri.startsWith('data:')) return uri;
     const formattedUri = uri.replace(/\\/g, '/');
-    return `http://10.0.2.2:5000/${formattedUri}`;
+    const baseUrl = api.defaults.baseURL.replace('/api', '');
+    return `${baseUrl}/${formattedUri}`;
   };
 
   const pickImage = async () => {
