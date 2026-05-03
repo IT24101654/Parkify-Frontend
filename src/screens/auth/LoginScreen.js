@@ -55,7 +55,6 @@ const LoginScreen = ({ navigation }) => {
         const displayRoles = roles.map(r => {
           const norm = r.trim().toUpperCase();
           if (norm === 'DRIVER') return 'DRIVER';
-          if (norm === 'SUPER_ADMIN') return 'SUPER_ADMIN';
           return 'PARKING_OWNER';
         });
         setAvailableRoles([...new Set(displayRoles)]);
@@ -125,28 +124,19 @@ const LoginScreen = ({ navigation }) => {
                   {availableRoles.map((role) => (
                     <TouchableOpacity 
                       key={role}
-                      style={[
-                        styles.roleBtn,
-                        role === 'SUPER_ADMIN' && { backgroundColor: COLORS.secondary }
-                      ]}
+                      style={styles.roleBtn}
                       onPress={() => handleRoleSelection(role)}
                       activeOpacity={0.8}
                     >
                       <View style={styles.roleIconBox}>
                         <MaterialCommunityIcons 
-                          name={
-                            role === 'DRIVER' ? 'steering' : 
-                            role === 'SUPER_ADMIN' ? 'shield-account' : 'home-city'
-                          } 
+                          name={role === 'DRIVER' ? 'steering' : 'home-city'} 
                           size={24} 
                           color="#FFF" 
                         />
                       </View>
                       <Text style={styles.roleBtnText}>
-                        {
-                          role === 'DRIVER' ? 'Driver' : 
-                          role === 'SUPER_ADMIN' ? 'System Admin' : 'Parking Owner'
-                        }
+                        {role === 'DRIVER' ? 'Driver' : 'Parking Owner'}
                       </Text>
                     </TouchableOpacity>
                   ))}
