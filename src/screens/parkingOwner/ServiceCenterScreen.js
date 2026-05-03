@@ -179,6 +179,7 @@ const ServiceCenterScreen = ({ navigation }) => {
     try {
       const payload = { 
         ...form, 
+        centerId: serviceCenter._id,
         category: selectedCategory.trim(), 
         price: parseFloat(form.price) 
       };
@@ -191,8 +192,11 @@ const ServiceCenterScreen = ({ navigation }) => {
       setEditingId(null);
       setForm({ name: '', description: '', price: '', estimatedTime: '', image: null });
       fetchServiceItems();
+      Alert.alert('Success', `Service ${editingId ? 'updated' : 'added'} successfully!`);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save service.');
+      console.error('Service Save Error:', error.response?.data || error.message);
+      const msg = error.response?.data?.error || error.response?.data?.message || 'Failed to save service.';
+      Alert.alert('Error', msg);
     }
   };
 
