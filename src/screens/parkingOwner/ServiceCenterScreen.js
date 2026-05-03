@@ -198,21 +198,36 @@ const ServiceCenterScreen = ({ navigation }) => {
       console.error('Service Save Error:', error.response?.data || error.message);
       const msg = error.response?.data?.error || error.response?.data?.message || 'Failed to save service.';
       Alert.alert('Error', msg);
+    } finally {
+      setItemsLoading(false);
     }
   };
 
   const handleDeleteItem = (id) => {
-    Alert.alert('Delete Service', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        try {
-          await api.delete(`/service-centers/service-items/${id}`);
-          fetchServiceItems();
-        } catch (error) {
-          Alert.alert('Error', 'Failed to delete service.');
-        }
-      }}
-    ]);
+    const performDelete = async () => {
+      try {
+        setItemsLoading(true);
+        await api.delete(`/service-centers/service-items/${id}`);
+        Alert.alert('Success', 'Service deleted successfully!');
+        fetchServiceItems();
+      } catch (error) {
+        console.error('Delete Error:', error);
+        Alert.alert('Error', 'Failed to delete service.');
+      } finally {
+        setItemsLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to delete this service?')) {
+        performDelete();
+      }
+    } else {
+      Alert.alert('Delete Service', 'Are you sure?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: performDelete }
+      ]);
+    }
   };
 
   const cfg = useMemo(() => CATEGORY_CONFIG[selectedCategory] || {}, [selectedCategory]);
