@@ -5,6 +5,10 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../../services/api';
+import DriverSidebar from '../../components/DriverSidebar';
+import { Dimensions, Animated } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 const DriverPaymentsScreen = ({ navigation }) => {
   const [payments, setPayments] = useState([]);
@@ -12,6 +16,15 @@ const DriverPaymentsScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [refundReason, setRefundReason] = useState('');
+
+  const [sidebarAnim] = useState(new Animated.Value(-width));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    const toValue = isSidebarOpen ? -width : 0;
+    Animated.timing(sidebarAnim, { toValue, duration: 300, useNativeDriver: false }).start();
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const fetchPayments = useCallback(async () => {
     try {
@@ -109,9 +122,17 @@ const DriverPaymentsScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
+      {/* Driver Sidebar */}
+      <DriverSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
+
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color="#2D4057" />
+        <TouchableOpacity onPress={toggleSidebar} style={styles.backBtn}>
+          <MaterialCommunityIcons name="menu" size={28} color="#2D4057" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Payments</Text>
         <TouchableOpacity onPress={fetchPayments} style={styles.refreshBtn}>

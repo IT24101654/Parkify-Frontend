@@ -19,6 +19,7 @@ import { PanResponder } from 'react-native';
 import api from '../services/api';
 import VoiceAssistantWidget from '../components/VoiceAssistant/VoiceAssistantWidget';
 import VoiceWave from '../components/VoiceAssistant/VoiceWave';
+import DriverSidebar from '../components/DriverSidebar';
 
 const { width } = Dimensions.get('window');
 
@@ -165,11 +166,11 @@ const DriverDashboard = ({ navigation }) => {
   ];
 
   return (
-    <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
       {/* Interactive Background Elements (ITP Style Mesh Gradient) */}
-      <View style={styles.bgWrapper}>
+      <View style={styles.bgWrapper} {...panResponder.panHandlers}>
         <Animated.View style={[styles.blob, styles.blob1, { transform: blob1Pos.getTranslateTransform() }]} />
         <Animated.View style={[styles.blob, styles.blob2, { transform: blob2Pos.getTranslateTransform() }]} />
         <Animated.View style={[styles.blob, styles.blob3, { transform: blob3Pos.getTranslateTransform() }]} />
@@ -177,66 +178,13 @@ const DriverDashboard = ({ navigation }) => {
       </View>
       <View style={styles.bgGradientOverlay} />
 
-      {/* Sidebar Overlay */}
-      {isSidebarOpen && (
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={toggleSidebar}
-        />
-      )}
-
-      {/* Custom Sidebar */}
-      <Animated.View style={[styles.sidebar, { left: sidebarAnim }]}>
-        {/* Sidebar Header with User Info */}
-        <View style={styles.sidebarHeader}>
-          <Image
-            source={require('../../assets/Parkify.png')}
-            style={styles.sidebarLogo}
-            resizeMode="contain"
-          />
-          <Text style={styles.sidebarBrand}>Parkify</Text>
-        </View>
-
-        <View style={styles.sidebarUserCard}>
-          <View style={[styles.sidebarAvatar, { overflow: 'hidden' }]}>
-            {user?.profilePicture ? (
-              <Image source={{ uri: getImageUrl(user.profilePicture) }} style={{ width: '100%', height: '100%' }} />
-            ) : (
-              <MaterialCommunityIcons name="account" size={36} color="#FFF" />
-            )}
-          </View>
-          <Text style={styles.sidebarUserName}>{user?.name?.toUpperCase() || 'DRIVER'}</Text>
-          <Text style={styles.sidebarUserRole}>Driver</Text>
-        </View>
-
-        <View style={styles.sidebarDivider} />
-
-        <ScrollView style={styles.sidebarMenu} showsVerticalScrollIndicator={false}>
-          {menuItems.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.menuItem} onPress={() => {
-              toggleSidebar();
-              if (item.id === 'vehicles') navigation.navigate('VehicleList');
-              else if (item.id === 'bookings') navigation.navigate('DriverReservations');
-              else if (item.id === 'payments') navigation.navigate('DriverPayments');
-              else if (item.id === 'profile') navigation.navigate('DriverProfile');
-              else if (item.id === 'services') navigation.navigate('DriverServiceAppointments');
-            }}>
-              <View style={styles.menuIconBox}>
-                <MaterialCommunityIcons name={item.icon} size={22} color="rgba(255,255,255,0.8)" />
-              </View>
-              <Text style={styles.menuText}>{item.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <View style={styles.sidebarDivider} />
-        <TouchableOpacity style={styles.sidebarLogout} onPress={logout}>
-          <MaterialCommunityIcons name="logout" size={22} color="#FFF" />
-          <Text style={styles.logoutText}>Sign Out</Text>
-        </TouchableOpacity>
-        <Text style={styles.sidebarVersion}>Parkify v1.0.0</Text>
-      </Animated.View>
+      {/* Driver Sidebar */}
+      <DriverSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Navbar */}

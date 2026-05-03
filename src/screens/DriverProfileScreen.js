@@ -20,6 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { COLORS, SHADOWS } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import DriverSidebar from '../components/DriverSidebar';
 
 const { width } = Dimensions.get('window');
 

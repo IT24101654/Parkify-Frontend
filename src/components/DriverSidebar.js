@@ -1,0 +1,227 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Dimensions,
+  Animated,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
+
+const { width } = Dimensions.get('window');
+
+const DriverSidebar = ({ isSidebarOpen, toggleSidebar, sidebarAnim, navigation }) => {
+  const { user, logout } = useAuth();
+
+  const getImageUrl = (uri) => {
+    if (!uri) return null;
+    if (uri.startsWith('http') || uri.startsWith('data:')) return uri;
+    const formattedUri = uri.replace(/\\/g, '/');
+    const baseUrl = api.defaults.baseURL.replace('/api', '');
+    return `${baseUrl}/${formattedUri}`;
+  };
+
+  const menuItems = [
+    { id: 'overview', title: 'Overview', icon: 'view-dashboard' },
+    { id: 'slots', title: 'Parking Slots', icon: 'map-marker-radius' },
+    { id: 'bookings', title: 'Reservations', icon: 'book-open-variant' },
+    { id: 'services', title: 'Service Appointments', icon: 'tools' },
+    { id: 'payments', title: 'Payments', icon: 'wallet' },
+    { id: 'vehicles', title: 'My Vehicles', icon: 'car-multiple' },
+    { id: 'profile', title: 'My Profile', icon: 'account-circle' },
+  ];
+
+  const handleNav = (id) => {
+    toggleSidebar();
+    if (id === 'overview') navigation.navigate('DriverDashboard');
+    else if (id === 'vehicles') navigation.navigate('VehicleList');
+    else if (id === 'bookings') navigation.navigate('DriverReservations');
+    else if (id === 'payments') navigation.navigate('DriverPayments');
+    else if (id === 'profile') navigation.navigate('DriverProfile');
+    else if (id === 'services') navigation.navigate('DriverServiceAppointments');
+    else if (id === 'slots') navigation.navigate('ParkingSlots');
+  };
+
+  return (
+    <>
+      {isSidebarOpen && (
+        <TouchableOpacity
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={toggleSidebar}
+        />
+      )}
+
+      <Animated.View style={[styles.sidebar, { left: sidebarAnim }]}>
+        <View style={styles.sidebarHeader}>
+          <Image
+            source={require('../../assets/Parkify.png')}
+            style={styles.sidebarLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.sidebarBrand}>Parkify</Text>
+        </View>
+
+        <View style={styles.sidebarUserCard}>
+          <View style={[styles.sidebarAvatar, { overflow: 'hidden' }]}>
+            {user?.profilePicture ? (
+              <Image source={{ uri: getImageUrl(user.profilePicture) }} style={{ width: '100%', height: '100%' }} />
+            ) : (
+              <MaterialCommunityIcons name="account" size={36} color="#FFF" />
+            )}
+          </View>
+          <Text style={styles.sidebarUserName}>{user?.name?.toUpperCase() || 'DRIVER'}</Text>
+          <Text style={styles.sidebarUserRole}>Driver</Text>
+        </View>
+
+        <View style={styles.sidebarDivider} />
+
+        <ScrollView style={styles.sidebarMenu} showsVerticalScrollIndicator={false}>
+          {menuItems.map((item) => (
+            <TouchableOpacity key={item.id} style={styles.menuItem} onPress={() => handleNav(item.id)}>
+              <View style={styles.menuIconBox}>
+                <MaterialCommunityIcons name={item.icon} size={22} color="rgba(255,255,255,0.8)" />
+              </View>
+              <Text style={styles.menuText}>{item.title}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={styles.sidebarDivider} />
+        <TouchableOpacity style={styles.sidebarLogout} onPress={logout}>
+          <MaterialCommunityIcons name="logout" size={22} color="#FFF" />
+          <Text style={styles.logoutText}>Sign Out</Text>
+        </TouchableOpacity>
+        <Text style={styles.sidebarVersion}>Parkify v1.0.0</Text>
+      </Animated.View>
+    </>
+  );
+};
+
+const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 2000,
+  },
+  sidebar: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: width * 0.75,
+    backgroundColor: '#2D4057',
+    zIndex: 3000,
+    padding: 20,
+    paddingTop: 40,
+    paddingBottom: 30,
+  },
+  sidebarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  sidebarLogo: {
+    width: 30,
+    height: 30,
+  },
+  sidebarBrand: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#FFF',
+    letterSpacing: 1,
+  },
+  sidebarUserCard: {
+    alignItems: 'center',
+    paddingVertical: 2,
+    marginBottom: 0,
+  },
+  sidebarAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#B26969',
+    marginBottom: 5,
+  },
+  sidebarUserName: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#FFF',
+    letterSpacing: 0.5,
+  },
+  sidebarUserRole: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#B26969',
+    marginTop: 2,
+  },
+  sidebarDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: 8,
+  },
+  sidebarMenu: {
+    flex: 1,
+    paddingTop: 0,
+  },
+  menuIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 5,
+    borderRadius: 14,
+    marginBottom: 0,
+  },
+  menuText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.85)',
+  },
+  sidebarLogout: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#B26969',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  logoutText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFF',
+  },
+  sidebarVersion: {
+    textAlign: 'center',
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 10,
+  },
+});
+
+export default DriverSidebar;

@@ -130,11 +130,11 @@ const ParkingOwnerDashboard = ({ navigation }) => {
   ];
 
   return (
-    <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
       {/* Interactive Background Elements (ITP Style Mesh Gradient) */}
-      <View style={styles.bgWrapper}>
+      <View style={styles.bgWrapper} {...panResponder.panHandlers}>
         <Animated.View style={[styles.blob, styles.blob1, { transform: blob1Pos.getTranslateTransform() }]} />
         <Animated.View style={[styles.blob, styles.blob2, { transform: blob2Pos.getTranslateTransform() }]} />
         <Animated.View style={[styles.blob, styles.blob3, { transform: blob3Pos.getTranslateTransform() }]} />

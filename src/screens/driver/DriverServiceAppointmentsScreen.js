@@ -6,10 +6,23 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../../services/api';
 import { COLORS, SHADOWS } from '../../theme/theme';
+import DriverSidebar from '../../components/DriverSidebar';
+import { Dimensions, Animated } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 const DriverServiceAppointmentsScreen = ({ navigation, route }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [sidebarAnim] = useState(new Animated.Value(-width));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    const toValue = isSidebarOpen ? -width : 0;
+    Animated.timing(sidebarAnim, { toValue, duration: 300, useNativeDriver: false }).start();
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const fetchAppointments = useCallback(async () => {
     try {
@@ -109,22 +122,18 @@ const DriverServiceAppointmentsScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
+
+      {/* Driver Sidebar */}
+      <DriverSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
+
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => {
-            const params = route.params;
-            if (params?.placeId) {
-              navigation.navigate('DriverServiceCenter', { 
-                placeId: params.placeId, 
-                parkingName: params.parkingName || 'Parking' 
-              });
-            } else {
-              navigation.goBack();
-            }
-          }} 
-          style={styles.backBtn}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={26} color={COLORS.primary} />
+        <TouchableOpacity onPress={toggleSidebar} style={styles.backBtn}>
+          <MaterialCommunityIcons name="menu" size={26} color={COLORS.primary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Service Appointments</Text>
