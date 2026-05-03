@@ -93,7 +93,10 @@ const ServiceAppointmentScreen = ({ route, navigation }) => {
         notes: form.notes
       };
 
+      console.log('DEBUG: Submitting booking payload:', payload);
       const res = await api.post('/service-appointments', payload);
+      console.log('DEBUG: Booking success:', res.data);
+
       Alert.alert('Success', `Appointment booked! ID: ${res.data.bookingId}`, [
         { text: 'OK', onPress: () => navigation.navigate('DriverServiceAppointments', {
           placeId: parkingPlaceId,
@@ -101,6 +104,7 @@ const ServiceAppointmentScreen = ({ route, navigation }) => {
         }) }
       ]);
     } catch (error) {
+      console.error('DEBUG: Booking Error Details:', error.response?.data || error.message);
       Alert.alert('Booking Failed', error.response?.data?.error || 'Something went wrong.');
     } finally {
       setLoading(false);
