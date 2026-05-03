@@ -37,15 +37,10 @@ const SetupProfileScreen = ({ route, navigation }) => {
         driverPreferences: user?.role === 'DRIVER' ? driverPreferences : undefined,
         ownerServices: user?.role === 'PARKING_OWNER' ? ownerServices : undefined
       });
-      
-      if (user?.role === 'DRIVER') {
-        navigation.navigate('VehicleSetup');
-      } else {
-        await updateUser(response.data.user);
-        Alert.alert('Success', 'Profile setup completed!', [
-          { text: 'Let\'s Go!' }
-        ]);
-      }
+      await updateUser(response.data.user);
+      Alert.alert('Success', 'Profile setup completed!', [
+        { text: 'Let\'s Go!' }
+      ]);
     } catch (error) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to complete setup');
     } finally {

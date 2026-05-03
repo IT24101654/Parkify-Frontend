@@ -181,7 +181,6 @@ const MainNavigator = () => {
      return (
        <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="SetupProfile" component={SetupProfileScreen} />
-          <Stack.Screen name="VehicleSetup" component={VehicleSetupScreen} />
        </Stack.Navigator>
      );
   }

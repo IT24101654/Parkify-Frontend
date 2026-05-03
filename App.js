@@ -22,8 +22,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
   },
   webContainer: {
-    height: '100vh',
-    width: '100vw',
-    overflow: 'hidden', // Metro/React Native Web handles internal scrolling
+    height: '100%',
+    width: '100%',
+    display: 'flex',
   }
 });

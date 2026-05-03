@@ -163,7 +163,8 @@ const LoginScreen = ({ navigation }) => {
                       placeholder="Enter your password"
                       value={password}
                       onChangeText={setPassword}
-                      secureTextEntry
+                      secureTextEntry={true}
+                      textContentType="password"
                       placeholderTextColor="#A0AEC0"
                     />
                   </View>

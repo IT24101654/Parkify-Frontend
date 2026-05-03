@@ -227,7 +227,8 @@ const RegisterScreen = ({ navigation }) => {
                   placeholder="••••••••"
                   value={password}
                   onChangeText={setPassword}
-                  secureTextEntry
+                  secureTextEntry={true}
+                  textContentType="password"
                   placeholderTextColor="#A0AEC0"
                 />
               </View>
