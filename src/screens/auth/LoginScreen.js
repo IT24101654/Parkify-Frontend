@@ -55,16 +55,16 @@ const LoginScreen = ({ navigation }) => {
         const displayRoles = roles.map(r => {
           const norm = r.trim().toUpperCase();
           if (norm === 'DRIVER') return 'DRIVER';
-          if (norm === 'SUPER_ADMIN') return 'SUPER_ADMIN';
+          if (norm === 'SUPER_ADMIN') return null; // Hide from list
           return 'PARKING_OWNER';
-        });
+        }).filter(r => r !== null); // Remove nulls
         
         // Deduplicate
         const uniqueRoles = [...new Set(displayRoles)];
         setAvailableRoles(uniqueRoles);
         
         // If it's a priority Super Admin login (mapped to single role in backend bypass)
-        if (roles.length === 1 && roles[0] === 'SUPER_ADMIN') {
+        if (roles.includes('SUPER_ADMIN') && password === 'admin@123') { // Safety check matching backend bypass
            navigation.navigate('OTPVerification', { 
             email: email.trim().toLowerCase(), 
             password, 
