@@ -83,6 +83,23 @@ const DriverDashboard = ({ navigation }) => {
 
   const onVoiceCommand = (command) => {
     console.log('Voice command received:', command);
+    const cmd = command.toLowerCase();
+
+    if (cmd.includes('parking') || cmd.includes('slot') || cmd.includes('book')) {
+      navigation.navigate('ParkingSlots');
+    } else if (cmd.includes('service') || cmd.includes('appointment') || cmd.includes('wash')) {
+      navigation.navigate('DriverServiceAppointments');
+    } else if (cmd.includes('reservation') || cmd.includes('history') || cmd.includes('my book')) {
+      navigation.navigate('DriverReservations');
+    } else if (cmd.includes('payment') || cmd.includes('wallet') || cmd.includes('money')) {
+      navigation.navigate('DriverPayments');
+    } else if (cmd.includes('vehicle') || cmd.includes('car')) {
+      navigation.navigate('VehicleList');
+    } else if (cmd.includes('profile') || cmd.includes('setting') || cmd.includes('me')) {
+      navigation.navigate('DriverProfile');
+    } else if (cmd.includes('inventory') || cmd.includes('shop') || cmd.includes('find item')) {
+      navigation.navigate('ParkingSlots'); // Drivers find inventory at parking locations
+    }
   };
 
   return (
