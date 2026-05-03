@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,21 +8,16 @@ import {
   Image,
   Dimensions,
   Animated,
-  PanResponder,
-  StatusBar,
   SafeAreaView,
+  StatusBar,
   Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import VoiceAssistantWidget from '../components/VoiceAssistant/VoiceAssistantWidget';
 import DriverSidebar from '../components/DriverSidebar';
 
-const { width, height } = Dimensions.get('window');
-
-// Distance calculation disabled to fix build issues
-const getDistanceKm = () => 0;
+const { width } = Dimensions.get('window');
 
 const FeatureCard = ({ icon, title, desc, footerText, color, onPress }) => (
   <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.7}>
@@ -43,10 +38,8 @@ const DriverDashboard = ({ navigation }) => {
   const [sidebarAnim] = useState(new Animated.Value(-width));
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Background mesh removed for performance
-
   useEffect(() => {
-    refreshUser();
+    if (refreshUser) refreshUser();
   }, []);
 
   const toggleSidebar = () => {
@@ -63,68 +56,10 @@ const DriverDashboard = ({ navigation }) => {
     return `${baseUrl}/${formattedUri}`;
   };
 
-  const onVoiceCommand = async (command) => {
-    console.log('Smart Voice command received:', command);
-    const cmd = command.toLowerCase();
-
-    // 1. Basic Navigation
-    if (cmd.includes('reservation') || cmd.includes('history')) {
-      navigation.navigate('DriverReservations');
-      return;
-    }
-    if (cmd.includes('payment') || cmd.includes('wallet')) {
-      navigation.navigate('DriverPayments');
-      return;
-    }
-    if (cmd.includes('vehicle') || cmd.includes('car')) {
-      navigation.navigate('VehicleList');
-      return;
-    }
-
-    // 2. Smart Parking Search
-    try {
-      const res = await api.get('/parking');
-      let places = (res.data || []).filter(p => p.status === 'ACTIVE');
-
-      if (places.length === 0) {
-        navigation.navigate('ParkingSlots');
-        return;
-      }
-
-      let bestMatch = null;
-      
-      if (cmd.includes('cheap')) {
-        bestMatch = places.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
-      } 
-      else if (cmd.includes('inventory') || cmd.includes('shop')) {
-        bestMatch = places.filter(p => p.hasInventory)[0];
-      }
-      else if (cmd.includes('service') || cmd.includes('center') || cmd.includes('wash')) {
-        bestMatch = places.filter(p => p.hasServiceCenter)[0];
-      }
-      else if (cmd.includes('available') || cmd.includes('free') || cmd.includes('slot')) {
-        bestMatch = places.sort((a, b) => b.slots - a.slots)[0];
-      }
-      else if (cmd.includes('near') || cmd.includes('close')) {
-        bestMatch = places[0];
-      }
-
-      if (bestMatch) {
-        navigation.navigate('ParkingSlots', { autoSelectPlace: bestMatch });
-      } else {
-        navigation.navigate('ParkingSlots');
-      }
-    } catch (error) {
-      console.error('Voice search error:', error);
-      navigation.navigate('ParkingSlots');
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      {/* Driver Sidebar */}
       <DriverSidebar 
         isSidebarOpen={isSidebarOpen} 
         toggleSidebar={toggleSidebar} 
@@ -134,7 +69,6 @@ const DriverDashboard = ({ navigation }) => {
 
       <ScrollView style={styles.mainContent} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.responsiveContent}>
-          {/* Navbar */}
           <View style={styles.navbar}>
             <TouchableOpacity onPress={toggleSidebar} style={styles.menuBtn}>
               <MaterialCommunityIcons name="menu" size={28} color="#2D4057" />
@@ -154,7 +88,6 @@ const DriverDashboard = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Welcome Section */}
           <View style={styles.welcomeSection}>
             <Text style={styles.welcomeSubtitle}>Welcome to your Dashboard</Text>
             <View style={styles.nameRow}>
@@ -164,16 +97,6 @@ const DriverDashboard = ({ navigation }) => {
             <View style={styles.welcomeDivider} />
           </View>
 
-          {/* High Performance Voice Assistant Widget */}
-          <VoiceAssistantWidget onCommandProcessed={onVoiceCommand} />
-
-          {/* Features Header */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Dashboard Features</Text>
-            <Text style={styles.sectionSubtitle}>Select a category to manage your parking experience</Text>
-          </View>
-
-          {/* Features Grid */}
           <View style={styles.grid}>
             <FeatureCard
               icon="map-marker-radius"
@@ -231,171 +154,29 @@ const DriverDashboard = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    width: '100%',
-  },
-  mainContent: {
-    flex: 1,
-    width: '100%',
-  },
-  responsiveContent: {
-    width: '100%',
-    maxWidth: Platform.OS === 'web' ? 800 : '100%',
-    alignSelf: 'center',
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingTop: 10,
-    paddingBottom: 40,
-  },
-  navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
+  container: { flex: 1, backgroundColor: '#FFF', width: '100%' },
+  mainContent: { flex: 1, width: '100%' },
+  responsiveContent: { width: '100%', maxWidth: Platform.OS === 'web' ? 800 : '100%', alignSelf: 'center', flex: 1 },
+  scrollContent: { padding: 20, paddingTop: 10, paddingBottom: 40 },
+  navbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   menuBtn: { padding: 4 },
-  navRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#2D4057',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  // Welcome Section
+  navRight: { flexDirection: 'row', alignItems: 'center', gap: 15 },
+  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#2D4057', justifyContent: 'center', alignItems: 'center' },
+  avatarText: { color: '#FFF', fontWeight: 'bold', textTransform: 'uppercase' },
   welcomeSection: { alignItems: 'center', marginBottom: 30, marginTop: 15 },
-  welcomeSubtitle: { fontSize: 24, fontWeight: '900', color: '#B26969', letterSpacing: -0.5, textAlign: 'center' },
+  welcomeSubtitle: { fontSize: 24, fontWeight: '900', color: '#B26969', textAlign: 'center' },
   nameRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
   welcomeTitle: { fontSize: 28, fontWeight: '800', color: '#2D4057', textAlign: 'center' },
-  welcomeDivider: { width: 40, height: 3, backgroundColor: '#ED8936', borderRadius: 2, marginTop: 10, opacity: 0.8 },
-  
-  sectionHeader: {
-    alignItems: 'center',
-    marginBottom: 25,
-    marginTop: 10,
-  },
-  sectionTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#B08974',
-    textAlign: 'center',
-    letterSpacing: -0.5,
-    marginBottom: 6,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#9C8C79',
-    fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  featureCard: {
-    width: '47%',
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 15,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-  },
-  fcIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  fcTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#2D4057',
-    marginBottom: 4,
-  },
-  fcDesc: {
-    fontSize: 11,
-    color: '#7A868E',
-    marginBottom: 12,
-    lineHeight: 16,
-  },
-  fcFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#F7FAFC',
-    paddingTop: 8,
-  },
-  fcFooterText: {
-    fontSize: 10,
-    color: '#9C8C79',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  notificationBtn: {
-    position: 'relative',
-  },
-  notificationDot: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#B26969',
-    borderWidth: 1.5,
-    borderColor: '#FFF',
-  },
-  bgGradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
-    zIndex: -1,
-  },
-  bgWrapper: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: -2,
-    backgroundColor: '#d1c9ba',
-  },
-  blob: {
-    position: 'absolute',
-    width: 350,
-    height: 350,
-    borderRadius: 175,
-    opacity: 0.5,
-  },
-  blob1: { backgroundColor: '#F2C6AF' },
-  blob2: { backgroundColor: '#BDAD9C' },
-  blob3: { backgroundColor: '#BBC4A0' },
-  blob4: { backgroundColor: '#99D3E4' },
+  welcomeDivider: { width: 40, height: 3, backgroundColor: '#ED8936', borderRadius: 2, marginTop: 10 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' },
+  featureCard: { width: '47%', backgroundColor: '#FFF', borderRadius: 20, padding: 15, marginBottom: 20, borderWidth: 1, borderColor: '#F0F0F0' },
+  fcIconWrapper: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  fcTitle: { fontSize: 15, fontWeight: '800', color: '#2D4057', marginBottom: 4 },
+  fcDesc: { fontSize: 11, color: '#7A868E', marginBottom: 12, lineHeight: 16 },
+  fcFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#F7FAFC', paddingTop: 8 },
+  fcFooterText: { fontSize: 10, color: '#9C8C79', fontWeight: '700', textTransform: 'uppercase' },
+  notificationBtn: { position: 'relative' },
+  notificationDot: { position: 'absolute', top: 0, right: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#B26969', borderWidth: 1.5, borderColor: '#FFF' },
 });
 
 export default DriverDashboard;
