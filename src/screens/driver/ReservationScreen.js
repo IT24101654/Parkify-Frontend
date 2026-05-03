@@ -8,6 +8,16 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
+const webInputStyle = {
+  width: '100%',
+  padding: '10px',
+  borderRadius: '8px',
+  border: '1px solid #EDF2F7',
+  marginTop: '5px',
+  fontSize: '16px',
+  backgroundColor: '#F8F9FA'
+};
+
 const ReservationScreen = ({ route, navigation }) => {
   const { place, slot } = route.params;
   const { user } = useAuth();
@@ -178,51 +188,89 @@ const ReservationScreen = ({ route, navigation }) => {
             <Text style={styles.sectionTitle}>Schedule</Text>
           </View>
           <View style={styles.card}>
-            <TouchableOpacity style={styles.inputRow} onPress={() => setShowDatePicker(true)}>
-              <Text style={styles.inputLabel}>Date</Text>
-              <Text style={styles.inputValue}>{date.toDateString()}</Text>
-            </TouchableOpacity>
+            {Platform.OS === 'web' ? (
+              <View style={{ padding: 15 }}>
+                <Text style={styles.webLabel}>Select Date:</Text>
+                <input 
+                  type="date" 
+                  value={date.toISOString().split('T')[0]}
+                  onChange={(e) => setDate(new Date(e.target.value))}
+                  style={webInputStyle}
+                />
+                <Text style={[styles.webLabel, { marginTop: 10 }]}>Start Time:</Text>
+                <input 
+                  type="time" 
+                  value={formatTime(startTime)}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(':');
+                    const newTime = new Date(startTime);
+                    newTime.setHours(parseInt(h), parseInt(m));
+                    setStartTime(newTime);
+                  }}
+                  style={webInputStyle}
+                />
+                <Text style={[styles.webLabel, { marginTop: 10 }]}>End Time:</Text>
+                <input 
+                  type="time" 
+                  value={formatTime(endTime)}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(':');
+                    const newTime = new Date(endTime);
+                    newTime.setHours(parseInt(h), parseInt(m));
+                    setEndTime(newTime);
+                  }}
+                  style={webInputStyle}
+                />
+              </View>
+            ) : (
+              <>
+                <TouchableOpacity style={styles.inputRow} onPress={() => setShowDatePicker(true)}>
+                  <Text style={styles.inputLabel}>Date</Text>
+                  <Text style={styles.inputValue}>{date.toDateString()}</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.inputRow} onPress={() => setShowStartTimePicker(true)}>
-              <Text style={styles.inputLabel}>Start Time</Text>
-              <Text style={styles.inputValue}>{startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.inputRow} onPress={() => setShowStartTimePicker(true)}>
+                  <Text style={styles.inputLabel}>Start Time</Text>
+                  <Text style={styles.inputValue}>{startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.inputRow, { borderBottomWidth: 0 }]} onPress={() => setShowEndTimePicker(true)}>
-              <Text style={styles.inputLabel}>End Time</Text>
-              <Text style={styles.inputValue}>{endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={[styles.inputRow, { borderBottomWidth: 0 }]} onPress={() => setShowEndTimePicker(true)}>
+                  <Text style={styles.inputLabel}>End Time</Text>
+                  <Text style={styles.inputValue}>{endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                </TouchableOpacity>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                minimumDate={new Date()}
-                onChange={(e, d) => {
-                  setShowDatePicker(false);
-                  if (d) setDate(d);
-                }}
-              />
-            )}
-            {showStartTimePicker && (
-              <DateTimePicker
-                value={startTime}
-                mode="time"
-                onChange={(e, t) => {
-                  setShowStartTimePicker(Platform.OS === 'ios');
-                  if (t) setStartTime(t);
-                }}
-              />
-            )}
-            {showEndTimePicker && (
-              <DateTimePicker
-                value={endTime}
-                mode="time"
-                onChange={(e, t) => {
-                  setShowEndTimePicker(Platform.OS === 'ios');
-                  if (t) setEndTime(t);
-                }}
-              />
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={date}
+                    mode="date"
+                    minimumDate={new Date()}
+                    onChange={(e, d) => {
+                      setShowDatePicker(false);
+                      if (d) setDate(d);
+                    }}
+                  />
+                )}
+                {showStartTimePicker && (
+                  <DateTimePicker
+                    value={startTime}
+                    mode="time"
+                    onChange={(e, t) => {
+                      setShowStartTimePicker(Platform.OS === 'ios');
+                      if (t) setStartTime(t);
+                    }}
+                  />
+                )}
+                {showEndTimePicker && (
+                  <DateTimePicker
+                    value={endTime}
+                    mode="time"
+                    onChange={(e, t) => {
+                      setShowEndTimePicker(Platform.OS === 'ios');
+                      if (t) setEndTime(t);
+                    }}
+                  />
+                )}
+              </>
             )}
           </View>
         </View>
@@ -320,7 +368,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#B26969', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 16, borderRadius: 16, gap: 8
   },
-  bookBtnText: { color: '#FFF', fontSize: 16, fontWeight: '900', letterSpacing: 1 }
+  bookBtnText: { color: '#FFF', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
+  webLabel: { fontSize: 14, fontWeight: '700', color: '#4A5568' }
 });
 
 export default ReservationScreen;

@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 14,
-    marginTop: 'auto',
+    marginTop: 10,
     marginBottom: 5,
   },
   logoutText: {

@@ -136,8 +136,10 @@ const AddParkingPlaceScreen = ({ navigation, route }) => {
         longitude: editPlace.longitude?.toString() || '79.8612'
       });
       if (editPlace.placeImage) {
-        const baseUrl = api.defaults.baseURL.replace('/api', '');
-        setImage(`${baseUrl}/uploads/parking-photos/${editPlace.placeImage}`);
+        let baseUrl = api.defaults.baseURL.replace('/api', '').replace(/\/$/, '');
+        const cleanPath = editPlace.placeImage.replace(/\\/g, '/');
+        const finalPath = cleanPath.includes('uploads/') ? cleanPath : `uploads/parking-photos/${cleanPath}`;
+        setImage(`${baseUrl}/${finalPath.startsWith('/') ? finalPath.slice(1) : finalPath}`);
       }
     }
   }, [isEdit, editPlace]);

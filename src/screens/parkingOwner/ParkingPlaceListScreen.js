@@ -108,11 +108,17 @@ const ParkingPlaceListScreen = ({ navigation }) => {
     );
   };
 
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    let baseUrl = api.defaults.baseURL.replace('/api', '').replace(/\/$/, '');
+    const cleanPath = imagePath.replace(/\\/g, '/');
+    const finalPath = cleanPath.includes('uploads/') ? cleanPath : `uploads/parking-photos/${cleanPath}`;
+    return `${baseUrl}/${finalPath.startsWith('/') ? finalPath.slice(1) : finalPath}`;
+  };
+
   const renderPlaceItem = ({ item }) => {
-    const baseUrl = api.defaults.baseURL.replace('/api', '');
-    const imageUrl = item.placeImage 
-      ? `${baseUrl}/uploads/parking-photos/${item.placeImage}` 
-      : null;
+    const imageUrl = getImageUrl(item.placeImage);
 
     return (
       <View style={[styles.card, SHADOWS.medium]}>

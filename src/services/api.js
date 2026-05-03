@@ -18,9 +18,6 @@ const BASE_URL = isProductionWeb || !__DEV__
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 30000, // 30 seconds
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Add a request interceptor to include the auth token
