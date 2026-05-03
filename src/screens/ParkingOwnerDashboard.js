@@ -100,7 +100,7 @@ const ParkingOwnerDashboard = ({ navigation }) => {
       {/* Custom Sidebar */}
       <Animated.View style={[styles.sidebar, { left: sidebarAnim }]}>
         <View style={styles.sidebarHeader}>
-          <Image source={require('../assets/Parkify.png')} style={styles.sidebarLogo} resizeMode="contain" />
+          <Image source={require('../../assets/Parkify.png')} style={styles.sidebarLogo} resizeMode="contain" />
           <Text style={styles.sidebarBrand}>Parkify</Text>
         </View>
 
