@@ -164,10 +164,7 @@ const EditVehicleScreen = ({ route, navigation }) => {
           }
         }
 
-        response = await api.put(`/vehicles/${id}`, data, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          transformRequest: (data) => data,
-        });
+        response = await api.put(`/vehicles/${id}`, data);
       } else {
         response = await api.put(`/vehicles/${id}`, formData);
       }

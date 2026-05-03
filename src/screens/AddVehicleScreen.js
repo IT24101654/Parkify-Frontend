@@ -127,10 +127,7 @@ const AddVehicleScreen = ({ navigation }) => {
         }
       }
 
-      await api.post('/vehicles', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        transformRequest: (data) => data,
-      });
+      await api.post('/vehicles', data);
 
       Alert.alert('Success', 'Vehicle added successfully');
       navigation.goBack();
