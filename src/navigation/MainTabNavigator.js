@@ -199,7 +199,7 @@ const MainNavigator = () => {
 const styles = StyleSheet.create({
   headerOuter: {
     backgroundColor: '#FFF',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : Platform.OS === 'ios' ? 50 : 0,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
