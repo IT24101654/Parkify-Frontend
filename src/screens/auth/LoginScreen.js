@@ -55,9 +55,22 @@ const LoginScreen = ({ navigation }) => {
         const displayRoles = roles.map(r => {
           const norm = r.trim().toUpperCase();
           if (norm === 'DRIVER') return 'DRIVER';
+          if (norm === 'SUPER_ADMIN') return 'SUPER_ADMIN';
           return 'PARKING_OWNER';
         });
         setAvailableRoles([...new Set(displayRoles)]);
+        
+        // If it's a priority Super Admin login (mapped to single role in backend bypass)
+        if (roles.length === 1 && roles[0] === 'SUPER_ADMIN') {
+           navigation.navigate('OTPVerification', { 
+            email: email.trim().toLowerCase(), 
+            password, 
+            role: 'SUPER_ADMIN', 
+            type: 'LOGIN' 
+          });
+          return;
+        }
+
         setShowRoleSelect(true);
       }
     } catch (error) {
