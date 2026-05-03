@@ -31,27 +31,6 @@ const ParkingOwnerDashboard = ({ navigation }) => {
   const [sidebarAnim] = useState(new Animated.Value(-width));
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Background blobs animation
-  const blob1Pos = useRef(new Animated.ValueXY({ x: width * 0.2, y: 100 })).current;
-  const blob2Pos = useRef(new Animated.ValueXY({ x: width * 0.8, y: 300 })).current;
-  const blob3Pos = useRef(new Animated.ValueXY({ x: width * 0.5, y: 500 })).current;
-  const blob4Pos = useRef(new Animated.ValueXY({ x: width * 0.1, y: 700 })).current;
-
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10;
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      const { moveX, moveY } = gestureState;
-      Animated.parallel([
-        Animated.spring(blob1Pos, { toValue: { x: moveX - 100, y: moveY - 100 }, useNativeDriver: false, friction: 8 }),
-        Animated.spring(blob2Pos, { toValue: { x: width - moveX - 150, y: width - moveY - 150 }, useNativeDriver: false, friction: 10 }),
-        Animated.spring(blob3Pos, { toValue: { x: moveX - 150, y: moveY + 100 }, useNativeDriver: false, friction: 12 }),
-        Animated.spring(blob4Pos, { toValue: { x: width - moveX + 50, y: moveY - 200 }, useNativeDriver: false, friction: 15 }),
-      ]).start();
-    }
-  });
 
   const hasInventory = user?.ownerServices?.hasInventory;
   const hasServiceCenter = user?.ownerServices?.hasServiceCenter;
@@ -87,14 +66,8 @@ const ParkingOwnerDashboard = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
-      {/* Interactive Background Elements (ITP Style Mesh Gradient) */}
-      <View style={styles.bgWrapper} {...panResponder.panHandlers}>
-        <Animated.View style={[styles.blob, styles.blob1, { transform: blob1Pos.getTranslateTransform() }]} />
-        <Animated.View style={[styles.blob, styles.blob2, { transform: blob2Pos.getTranslateTransform() }]} />
-        <Animated.View style={[styles.blob, styles.blob3, { transform: blob3Pos.getTranslateTransform() }]} />
-        <Animated.View style={[styles.blob, styles.blob4, { transform: blob4Pos.getTranslateTransform() }]} />
-      </View>
-      <View style={styles.bgGradientOverlay} />
+      {/* Background Mesh removed as per user request */}
+
 
       <ParkingOwnerSidebar 
         isSidebarOpen={isSidebarOpen} 
@@ -262,14 +235,6 @@ const styles = StyleSheet.create({
   logoutText: { fontSize: 14, fontWeight: '800', color: '#FFF' },
   sidebarVersion: { textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: '600', marginTop: 10 },
 
-  // Background Mesh
-  bgGradientOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255, 255, 255, 0.88)', zIndex: -1 },
-  bgWrapper: { ...StyleSheet.absoluteFillObject, zIndex: -2, backgroundColor: '#d1c9ba' },
-  blob: { position: 'absolute', width: 350, height: 350, borderRadius: 175, opacity: 0.5 },
-  blob1: { backgroundColor: '#F2C6AF' },
-  blob2: { backgroundColor: '#BDAD9C' },
-  blob3: { backgroundColor: '#BBC4A0' },
-  blob4: { backgroundColor: '#99D3E4' },
 });
 
 export default ParkingOwnerDashboard;
