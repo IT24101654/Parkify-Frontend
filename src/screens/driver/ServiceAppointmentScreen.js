@@ -72,6 +72,8 @@ const ServiceAppointmentScreen = ({ route, navigation }) => {
     if (selectedDate) setForm({ ...form, serviceDate: selectedDate });
   };
 
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const handleSubmit = async () => {
     if (!form.customerName || !form.vehicleId || !form.timeSlot) {
       Alert.alert('Error', 'Please fill all required fields and select a time slot.');
@@ -97,12 +99,16 @@ const ServiceAppointmentScreen = ({ route, navigation }) => {
       const res = await api.post('/service-appointments', payload);
       console.log('DEBUG: Booking success:', res.data);
 
-      Alert.alert('Success', `Appointment booked! ID: ${res.data.bookingId}`, [
-        { text: 'OK', onPress: () => navigation.navigate('DriverServiceAppointments', {
+      setShowSuccess(true);
+      
+      // Auto-navigate after 2 seconds
+      setTimeout(() => {
+        navigation.navigate('DriverServiceAppointments', {
           placeId: parkingPlaceId,
           parkingName: parkingName
-        }) }
-      ]);
+        });
+      }, 1500);
+
     } catch (error) {
       console.error('DEBUG: Booking Error Details:', error.response?.data || error.message);
       Alert.alert('Booking Failed', error.response?.data?.error || 'Something went wrong.');
@@ -260,11 +266,18 @@ const ServiceAppointmentScreen = ({ route, navigation }) => {
           />
           
         </View>
+        
+        {showSuccess && (
+          <View style={styles.successBox}>
+            <MaterialCommunityIcons name="check-circle" size={20} color="#059669" />
+            <Text style={styles.successText}>Booking Confirmed! Redirecting...</Text>
+          </View>
+        )}
 
         <TouchableOpacity 
-          style={[styles.submitBtn, loading && {opacity: 0.7}]} 
+          style={[styles.submitBtn, (loading || showSuccess) && {opacity: 0.7}]} 
           onPress={handleSubmit}
-          disabled={loading}
+          disabled={loading || showSuccess}
         >
           {loading ? <ActivityIndicator color="#FFF" /> : (
             <>
@@ -339,7 +352,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.secondary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 10, height: 56, borderRadius: 12
   },
-  submitBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800', letterSpacing: 1 }
+  submitBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800', letterSpacing: 1 },
+  
+  successBox: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, backgroundColor: '#D1FAE5', padding: 12, borderRadius: 12,
+    marginBottom: 15, borderWidth: 1, borderColor: '#A7F3D0'
+  },
+  successText: { fontSize: 14, fontWeight: '700', color: '#059669' }
 });
 
 export default ServiceAppointmentScreen;
