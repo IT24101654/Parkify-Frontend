@@ -124,7 +124,7 @@ const OTPVerificationScreen = ({ route, navigation }) => {
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
-                ref={el => inputRefs.current[index] = el}
+                ref={el => { if (inputRefs.current) inputRefs.current[index] = el; }}
                 style={[styles.otpInput, digit !== '' && styles.otpInputActive]}
                 maxLength={1}
                 keyboardType="number-pad"

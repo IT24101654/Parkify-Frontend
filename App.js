@@ -3,17 +3,15 @@ import { StatusBar } from 'expo-status-bar';
 import { View, Platform, StyleSheet } from 'react-native';
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useEffect } from 'react';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={styles.container}>
+    <View style={styles.container}>
       <AuthProvider>
         <AppNavigator />
         <StatusBar style="light" backgroundColor="#1E1E1E" />
       </AuthProvider>
-    </GestureHandlerRootView>
+    </View>
   );
 }
 
