@@ -96,9 +96,6 @@ const DriverDashboard = ({ navigation }) => {
     return `${baseUrl}/${formattedUri}`;
   };
 
-    }
-  };
-
   const onVoiceCommand = async (command) => {
     console.log('Smart Voice command received:', command);
     const cmd = command.toLowerCase();
@@ -117,54 +114,72 @@ const DriverDashboard = ({ navigation }) => {
       return;
     }
 
-    // 2. Smart Parking Search (Cheapest / Nearest)
-    if (cmd.includes('parking') || cmd.includes('slot') || cmd.includes('book')) {
-      try {
-        const res = await api.get('/parking');
-        let places = (res.data || []).filter(p => p.status === 'ACTIVE');
+    // 2. Smart Parking Search
+    try {
+      const res = await api.get('/parking');
+      let places = (res.data || []).filter(p => p.status === 'ACTIVE');
 
-        if (places.length === 0) {
-          navigation.navigate('ParkingSlots');
-          return;
+      if (places.length === 0) {
+        navigation.navigate('ParkingSlots');
+        return;
+      }
+
+      let bestMatch = null;
+      
+      // Get user location for distance-based sorting
+      let userLat, userLon;
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const loc = await Location.getCurrentPositionAsync({});
+        userLat = loc.coords.latitude;
+        userLon = loc.coords.longitude;
+      }
+
+      if (cmd.includes('cheap')) {
+        bestMatch = places.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
+      } 
+      else if (cmd.includes('inventory') || cmd.includes('shop') || cmd.includes('item') || cmd.includes('part')) {
+        const withInv = places.filter(p => p.hasInventory);
+        if (withInv.length > 0 && userLat) {
+          bestMatch = withInv.sort((a, b) => {
+            const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
+            const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
+            return dA - dB;
+          })[0];
+        } else if (withInv.length > 0) {
+          bestMatch = withInv[0];
         }
-
-        let bestMatch = null;
-
-        if (cmd.includes('cheap')) {
-          // Sort by price
-          bestMatch = places.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0];
-        } else if (cmd.includes('near') || cmd.includes('close')) {
-          // Get user location first
-          const { status } = await Location.requestForegroundPermissionsAsync();
-          if (status === 'granted') {
-            const loc = await Location.getCurrentPositionAsync({});
-            const userLat = loc.coords.latitude;
-            const userLon = loc.coords.longitude;
-            
-            bestMatch = places.sort((a, b) => {
-              const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
-              const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
-              return dA - dB;
-            })[0];
-          }
+      }
+      else if (cmd.includes('service') || cmd.includes('center') || cmd.includes('wash') || cmd.includes('repair')) {
+        const withService = places.filter(p => p.hasServiceCenter);
+        if (withService.length > 0 && userLat) {
+          bestMatch = withService.sort((a, b) => {
+            const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
+            const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
+            return dA - dB;
+          })[0];
+        } else if (withService.length > 0) {
+          bestMatch = withService[0];
         }
+      }
+      else if (cmd.includes('available') || cmd.includes('free') || cmd.includes('slot') || cmd.includes('space')) {
+        bestMatch = places.sort((a, b) => b.slots - a.slots)[0];
+      }
+      else if ((cmd.includes('near') || cmd.includes('close')) && userLat) {
+        bestMatch = places.sort((a, b) => {
+          const dA = getDistanceKm(userLat, userLon, parseFloat(a.latitude), parseFloat(a.longitude));
+          const dB = getDistanceKm(userLat, userLon, parseFloat(b.latitude), parseFloat(b.longitude));
+          return dA - dB;
+        })[0];
+      }
 
-        if (bestMatch) {
-          navigation.navigate('ParkingSlots', { autoSelectPlace: bestMatch });
-        } else {
-          navigation.navigate('ParkingSlots');
-        }
-      } catch (error) {
-        console.error('Voice search error:', error);
+      if (bestMatch) {
+        navigation.navigate('ParkingSlots', { autoSelectPlace: bestMatch });
+      } else {
         navigation.navigate('ParkingSlots');
       }
-      return;
-    }
-
-    // Fallback navigation
-    if (cmd.includes('service') || cmd.includes('appointment')) {
-      navigation.navigate('DriverServiceAppointments');
-    } else if (cmd.includes('inventory') || cmd.includes('shop')) {
+    } catch (error) {
+      console.error('Voice search error:', error);
       navigation.navigate('ParkingSlots');
     }
   };
