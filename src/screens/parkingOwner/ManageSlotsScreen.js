@@ -9,6 +9,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../theme/theme';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import ParkingOwnerSidebar from '../../components/ParkingOwnerSidebar';
 
 const { width } = Dimensions.get('window');
 
@@ -220,50 +221,12 @@ const ManageSlotsScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
-      {/* Sidebar Overlay */}
-      {isSidebarOpen && (
-        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={toggleSidebar} />
-      )}
-
-      {/* Navy Sidebar */}
-      <Animated.View style={[styles.sidebar, { left: sidebarAnim }]}>
-        <View style={styles.sidebarHeader}>
-          <Image source={require('../../../assets/Parkify.png')} style={styles.sidebarLogo} resizeMode="contain" />
-          <Text style={styles.sidebarBrand}>Parkify</Text>
-        </View>
-
-        <View style={styles.sidebarUserCard}>
-          <View style={[styles.sidebarAvatar, { overflow: 'hidden' }]}>
-            {user?.profilePicture ? (
-              <Image source={{ uri: user.profilePicture }} style={{ width: '100%', height: '100%' }} />
-            ) : (
-              <MaterialCommunityIcons name="account" size={36} color="#FFF" />
-            )}
-          </View>
-          <Text style={styles.sidebarUserName}>{user?.name?.toUpperCase() || 'OWNER'}</Text>
-          <Text style={styles.sidebarUserRole}>Parking Owner</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        <ScrollView style={styles.sidebarMenu} showsVerticalScrollIndicator={false}>
-          {sidebarMenuItems.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.menuItem} onPress={() => handleSidebarNav(item.id)}>
-              <View style={styles.menuIconBox}>
-                <MaterialCommunityIcons name={item.icon} size={22} color="rgba(255,255,255,0.8)" />
-              </View>
-              <Text style={styles.menuText}>{item.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <View style={styles.divider} />
-        <TouchableOpacity style={styles.sidebarLogout} onPress={logout}>
-          <MaterialCommunityIcons name="logout" size={22} color="#FFF" />
-          <Text style={styles.logoutText}>Sign Out</Text>
-        </TouchableOpacity>
-        <Text style={styles.sidebarVersion}>Parkify v1.0.0</Text>
-      </Animated.View>
+      <ParkingOwnerSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
 
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>

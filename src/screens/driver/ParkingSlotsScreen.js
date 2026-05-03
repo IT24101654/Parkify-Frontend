@@ -87,20 +87,30 @@ const ParkingSlotsScreen = ({ navigation }) => {
   }, []);
 
   const requestLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') return;
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
 
-    let location = await Location.getCurrentPositionAsync({});
-    const loc = {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-    };
-    setUserLocation(loc);
-    setMapRegion({
-      ...loc,
-      latitudeDelta: 0.02,
-      longitudeDelta: 0.02,
-    });
+      // Use last known position for speed, then update with current position
+      let location = await Location.getLastKnownPositionAsync({});
+      if (!location) {
+        location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      }
+      
+      const loc = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+      setUserLocation(loc);
+      setMapRegion(prev => ({
+        ...prev,
+        ...loc,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }));
+    } catch (e) {
+      console.log("Location error:", e.message);
+    }
   };
 
   useEffect(() => {
@@ -195,23 +205,15 @@ const ParkingSlotsScreen = ({ navigation }) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
 
-    let baseUrl = api.defaults.baseURL;
-    if (baseUrl.endsWith('/api')) {
-      baseUrl = baseUrl.slice(0, -4);
-    } else if (baseUrl.endsWith('/api/')) {
-      baseUrl = baseUrl.slice(0, -5);
-    }
-
+    let baseUrl = api.defaults.baseURL.replace('/api', '').replace(/\/$/, '');
+    
     // Parking images are in uploads/parking-photos/
-    // If the imagePath already contains the folder, use it, otherwise prepend
     const cleanPath = imagePath.replace(/\\/g, '/');
     const finalPath = cleanPath.includes('uploads/') 
       ? cleanPath 
       : `uploads/parking-photos/${cleanPath}`;
     
-    // Avoid double slashes
     const pathPart = finalPath.startsWith('/') ? finalPath.slice(1) : finalPath;
-    
     return `${baseUrl}/${pathPart}`;
   };
 
@@ -498,7 +500,13 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, marginLeft: 10, fontSize: 15, color: '#2D3748' },
 
-  mapContainer: { height: height * 0.35, position: 'relative' },
+  mapContainer: { 
+    height: Platform.OS === 'web' ? 400 : height * 0.35, 
+    position: 'relative',
+    width: '100%',
+    maxWidth: Platform.OS === 'web' ? 800 : '100%',
+    alignSelf: 'center'
+  },
   map: { ...StyleSheet.absoluteFillObject },
   gpsBtn: {
     position: 'absolute',
@@ -534,7 +542,14 @@ const styles = StyleSheet.create({
     marginTop: -2
   },
 
-  listSection: { flex: 1, borderTopLeftRadius: 30, borderTopRightRadius: 30, backgroundColor: '#FFF', marginTop: -20 },
+  listSection: { 
+    flex: 1, 
+    borderTopLeftRadius: 30, 
+    borderTopRightRadius: 30, 
+    backgroundColor: '#FFF', 
+    marginTop: -20,
+    overflow: Platform.OS === 'web' ? 'auto' : 'visible'
+  },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 25, paddingBottom: 15 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: '#2D3748' },
   countText: { fontSize: 13, color: '#A0AEC0', fontWeight: '600' },
@@ -576,18 +591,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderTopLeftRadius: 35,
     borderTopRightRadius: 35,
-    height: height * 0.85,
+    height: Platform.OS === 'web' ? '90%' : height * 0.85,
+    maxHeight: Platform.OS === 'web' ? '90vh' : 'auto',
     elevation: 20,
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 15,
-    zIndex: 1000
+    zIndex: 1000,
+    overflow: Platform.OS === 'web' ? 'hidden' : 'visible'
   },
   cardHeader: { alignItems: 'center', paddingVertical: 15 },
   handle: { width: 50, height: 5, backgroundColor: '#E2E8F0', borderRadius: 10 },
   closeBtn: { position: 'absolute', right: 25, top: 15, padding: 5 },
   cardImage: { width: width, height: 200, marginTop: 0, borderRadius: 20 },
-  cardContent: { padding: 20, paddingTop: 20, paddingBottom: 60 },
+  cardContent: { padding: 20, paddingTop: 20, paddingBottom: 60, flexGrow: 1 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   cardTitle: { fontSize: 24, fontWeight: '900', color: '#2D3748' },
   cardSubtitle: { fontSize: 15, color: '#A0AEC0', fontWeight: '700', marginTop: 4 },

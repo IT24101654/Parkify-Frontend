@@ -1,41 +1,73 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
+
+// Helper to convert React children to marker data for Leaflet
+const extractMarkers = (children) => {
+  const markers = [];
+  React.Children.forEach(children, child => {
+    if (child && child.type && (child.type.name === 'Marker' || child.type.displayName === 'Marker' || child.props.coordinate)) {
+      markers.push({
+        latitude: child.props.coordinate.latitude,
+        longitude: child.props.coordinate.longitude,
+        title: child.props.title || '',
+        description: child.props.description || ''
+      });
+    }
+  });
+  return markers;
+};
 
 const MapView = React.forwardRef(({ style, region, children, onRegionChangeComplete, onPress }, ref) => {
   const iframeRef = useRef(null);
-  const { latitude, longitude } = region || { latitude: 6.9271, longitude: 79.8612 };
+  const initialRegion = region || { latitude: 6.9271, longitude: 79.8612 };
+  
+  const markers = useMemo(() => extractMarkers(children), [children]);
 
-  // Use a Leaflet map via CDN inside the iframe to make it interactive
-  const mapHtml = `
+  const mapHtml = useMemo(() => `
     <!DOCTYPE html>
     <html>
     <head>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <style>
-        body { margin: 0; padding: 0; }
+        body { margin: 0; padding: 0; background: #f0f0f0; }
         #map { height: 100vh; width: 100vw; }
+        .custom-marker { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
       </style>
     </head>
     <body>
       <div id="map"></div>
       <script>
-        var map = L.map('map').setView([${latitude}, ${longitude}], 13);
+        var map = L.map('map', { zoomControl: false }).setView([${initialRegion.latitude}, ${initialRegion.longitude}], 13);
+        L.control.zoom({ position: 'topright' }).addTo(map);
+        
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
           attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        var marker = L.marker([${latitude}, ${longitude}], { draggable: true }).addTo(map);
+        var markers = [];
+        var activeMarker = null;
+
+        function clearMarkers() {
+          markers.forEach(m => map.removeLayer(m));
+          markers = [];
+        }
+
+        function addMarkers(markerList) {
+          clearMarkers();
+          markerList.forEach(m => {
+            var leafletMarker = L.marker([m.latitude, m.longitude]).addTo(map);
+            if (m.title) leafletMarker.bindPopup("<b>" + m.title + "</b><br>" + (m.description || ''));
+            markers.push(leafletMarker);
+          });
+        }
+
+        // Initial markers
+        addMarkers(${JSON.stringify(markers)});
 
         map.on('click', function(e) {
-          marker.setLatLng(e.latlng);
           window.parent.postMessage({ type: 'onPress', coordinate: { latitude: e.latlng.lat, longitude: e.latlng.lng } }, '*');
-        });
-
-        marker.on('dragend', function(e) {
-          var pos = marker.getLatLng();
-          window.parent.postMessage({ type: 'onDragEnd', coordinate: { latitude: pos.lat, longitude: pos.lng } }, '*');
         });
 
         map.on('moveend', function() {
@@ -46,20 +78,18 @@ const MapView = React.forwardRef(({ style, region, children, onRegionChangeCompl
         window.addEventListener('message', function(event) {
           if (event.data.type === 'animateToRegion') {
             map.flyTo([event.data.region.latitude, event.data.region.longitude], 15);
-            marker.setLatLng([event.data.region.latitude, event.data.region.longitude]);
+          } else if (event.data.type === 'updateMarkers') {
+            addMarkers(event.data.markers);
           }
         });
       </script>
     </body>
     </html>
-  `;
+  `, [initialRegion.latitude, initialRegion.longitude]);
 
   useEffect(() => {
     const handleMessage = (event) => {
       if (event.data.type === 'onPress' && onPress) {
-        onPress({ nativeEvent: { coordinate: event.data.coordinate } });
-      } else if (event.data.type === 'onDragEnd' && onPress) {
-        // We reuse onPress or handle it specifically
         onPress({ nativeEvent: { coordinate: event.data.coordinate } });
       } else if (event.data.type === 'onRegionChangeComplete' && onRegionChangeComplete) {
         onRegionChangeComplete({
@@ -75,10 +105,14 @@ const MapView = React.forwardRef(({ style, region, children, onRegionChangeCompl
     return () => window.removeEventListener('message', handleMessage);
   }, [onPress, onRegionChangeComplete]);
 
-  // Expose methods via ref
+  // Update markers when children change
+  useEffect(() => {
+    iframeRef.current?.contentWindow?.postMessage({ type: 'updateMarkers', markers }, '*');
+  }, [markers]);
+
   React.useImperativeHandle(ref, () => ({
-    animateToRegion: (region) => {
-      iframeRef.current?.contentWindow?.postMessage({ type: 'animateToRegion', region }, '*');
+    animateToRegion: (reg) => {
+      iframeRef.current?.contentWindow?.postMessage({ type: 'animateToRegion', region: reg }, '*');
     }
   }));
 
@@ -96,13 +130,15 @@ const MapView = React.forwardRef(({ style, region, children, onRegionChangeCompl
   );
 });
 
-export const Marker = ({ coordinate, children }) => null;
+export const Marker = ({ coordinate, title, description, children }) => null;
 export const Circle = () => null;
 export const UrlTile = () => null;
 
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
+    flex: 1,
+    backgroundColor: '#f0f0f0'
   },
 });
 

@@ -5,40 +5,33 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
 
 const { width, height } = Dimensions.get('window');
 
-const DriverSidebar = ({ isSidebarOpen, toggleSidebar, sidebarAnim, navigation }) => {
+const ParkingOwnerSidebar = ({ isSidebarOpen, toggleSidebar, sidebarAnim, navigation }) => {
   const { user, logout } = useAuth();
 
-  const getImageUrl = (uri) => {
-    if (!uri) return null;
-    if (uri.startsWith('http') || uri.startsWith('data:')) return uri;
-    const formattedUri = uri.replace(/\\/g, '/');
-    const baseUrl = api.defaults.baseURL.replace('/api', '');
-    return `${baseUrl}/${formattedUri}`;
-  };
-
   const menuItems = [
-    { id: 'overview', title: 'Overview', icon: 'view-dashboard' },
-    { id: 'slots', title: 'Parking Slots', icon: 'map-marker-radius' },
-    { id: 'bookings', title: 'Reservations', icon: 'book-open-variant' },
-    { id: 'services', title: 'Service Appointments', icon: 'tools' },
-    { id: 'payments', title: 'Payments', icon: 'wallet' },
-    { id: 'vehicles', title: 'My Vehicles', icon: 'car-multiple' },
-    { id: 'profile', title: 'My Profile', icon: 'account-circle' },
+    { id: 'dashboard', title: 'Dashboard', icon: 'view-dashboard' },
+    { id: 'slots', title: 'Parking Slots', icon: 'car-brake-parking' },
+    { id: 'inventory', title: 'Inventory', icon: 'package-variant-closed' },
+    { id: 'service', title: 'Service Center', icon: 'tools' },
+    { id: 'reservations', title: 'Reservations', icon: 'calendar-check' },
+    { id: 'serviceBookings', title: 'Service Appointments', icon: 'clock-check' },
+    { id: 'earningsHistory', title: 'Earnings', icon: 'cash-multiple' },
+    { id: 'profile', title: 'My Profile', icon: 'account-cog' },
   ];
 
   const handleNav = (id) => {
     toggleSidebar();
-    if (id === 'overview') navigation.navigate('DriverDashboard');
-    else if (id === 'vehicles') navigation.navigate('VehicleList');
-    else if (id === 'bookings') navigation.navigate('DriverReservations');
-    else if (id === 'payments') navigation.navigate('DriverPayments');
-    else if (id === 'profile') navigation.navigate('DriverProfile');
-    else if (id === 'services') navigation.navigate('DriverServiceAppointments');
-    else if (id === 'slots') navigation.navigate('ParkingSlots');
+    if (id === 'dashboard') navigation.navigate('ParkingOwnerDashboard');
+    else if (id === 'slots') navigation.navigate('ParkingPlaceList');
+    else if (id === 'inventory') navigation.navigate('Inventory');
+    else if (id === 'service') navigation.navigate('ServiceCenter');
+    else if (id === 'reservations') navigation.navigate('OwnerReservations');
+    else if (id === 'serviceBookings') navigation.navigate('OwnerServiceAppointments');
+    else if (id === 'earningsHistory') navigation.navigate('OwnerEarnings');
+    else if (id === 'profile') navigation.navigate('ParkingOwnerProfile');
   };
 
   return (
@@ -64,14 +57,14 @@ const DriverSidebar = ({ isSidebarOpen, toggleSidebar, sidebarAnim, navigation }
         <View style={styles.sidebarUserCard}>
           <View style={styles.sidebarAvatar}>
             {user?.profilePicture ? (
-              <Image source={{ uri: getImageUrl(user.profilePicture) }} style={styles.avatarImg} />
+              <Image source={{ uri: user.profilePicture }} style={styles.avatarImg} />
             ) : (
               <MaterialCommunityIcons name="account" size={36} color="#FFF" />
             )}
           </View>
           <View>
-            <Text style={styles.sidebarUserName}>{user?.name?.toUpperCase() || 'DRIVER'}</Text>
-            <Text style={styles.sidebarUserRole}>Driver</Text>
+            <Text style={styles.sidebarUserName}>{user?.name?.toUpperCase() || 'OWNER'}</Text>
+            <Text style={styles.sidebarUserRole}>Parking Owner</Text>
           </View>
         </View>
 
@@ -116,14 +109,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    zIndex: 2000,
+    zIndex: 999,
   },
   sidebar: {
     position: 'absolute',
     top: 0, bottom: 0,
     width: Platform.OS === 'web' ? 300 : width * 0.8,
     backgroundColor: '#1A202C',
-    zIndex: 3000,
+    zIndex: 1000,
     paddingVertical: 20,
     paddingHorizontal: 15,
   },
@@ -234,4 +227,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DriverSidebar;
+export default ParkingOwnerSidebar;

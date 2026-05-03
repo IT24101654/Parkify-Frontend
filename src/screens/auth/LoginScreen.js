@@ -51,7 +51,9 @@ const LoginScreen = ({ navigation }) => {
           type: 'LOGIN' 
         });
       } else if (status === 'ROLE_SELECTION_REQUIRED') {
-        setAvailableRoles(roles);
+        // Normalize roles to avoid duplicates due to casing or whitespace
+        const normalizedRoles = roles.map(r => r.trim().toUpperCase());
+        setAvailableRoles([...new Set(normalizedRoles)]);
         setShowRoleSelect(true);
       }
     } catch (error) {

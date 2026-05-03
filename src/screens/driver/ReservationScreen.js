@@ -7,6 +7,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import DriverSidebar from '../../components/DriverSidebar';
+import { Animated, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 const webInputStyle = {
   width: '100%',
@@ -34,6 +38,15 @@ const ReservationScreen = ({ route, navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+
+  const [sidebarAnim] = useState(new Animated.Value(-width));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    const toValue = isSidebarOpen ? -width : 0;
+    Animated.timing(sidebarAnim, { toValue, duration: 300, useNativeDriver: false }).start();
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   useEffect(() => {
     fetchVehicles();
@@ -126,7 +139,17 @@ const ReservationScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
+      <DriverSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
+
       <View style={styles.header}>
+        <TouchableOpacity onPress={toggleSidebar} style={styles.backBtn}>
+          <MaterialCommunityIcons name="menu" size={28} color="#2D4057" />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={28} color="#2D4057" />
         </TouchableOpacity>

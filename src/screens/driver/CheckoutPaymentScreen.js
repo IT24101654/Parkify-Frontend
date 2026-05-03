@@ -5,12 +5,25 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../../services/api';
+import DriverSidebar from '../../components/DriverSidebar';
+import { Animated, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 const CheckoutPaymentScreen = ({ route, navigation }) => {
   const { reservation, place } = route.params;
   const [selectedMethod, setSelectedMethod] = useState('STRIPE');
   const [processing, setProcessing] = useState(false);
   const [cashSuccess, setCashSuccess] = useState(false);
+
+  const [sidebarAnim] = useState(new Animated.Value(-width));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    const toValue = isSidebarOpen ? -width : 0;
+    Animated.timing(sidebarAnim, { toValue, duration: 300, useNativeDriver: false }).start();
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const handlePayment = async () => {
     setProcessing(true);
@@ -80,7 +93,18 @@ const CheckoutPaymentScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
+      {/* Sidebar */}
+      <DriverSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
+
       <View style={styles.header}>
+        <TouchableOpacity onPress={toggleSidebar} style={styles.backBtn}>
+          <MaterialCommunityIcons name="menu" size={28} color="#2D4057" />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={28} color="#2D4057" />
         </TouchableOpacity>

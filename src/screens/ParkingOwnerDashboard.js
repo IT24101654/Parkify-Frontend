@@ -37,7 +37,9 @@ const ParkingOwnerDashboard = ({ navigation }) => {
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10;
+    },
     onPanResponderMove: (evt, gestureState) => {
       const { moveX, moveY } = gestureState;
       Animated.parallel([
@@ -92,54 +94,12 @@ const ParkingOwnerDashboard = ({ navigation }) => {
       </View>
       <View style={styles.bgGradientOverlay} />
 
-      {/* Sidebar Overlay */}
-      {isSidebarOpen && (
-        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={toggleSidebar} />
-      )}
-
-      {/* Custom Sidebar */}
-      <Animated.View style={[styles.sidebar, { left: sidebarAnim }]}>
-        <View style={styles.sidebarHeader}>
-          <Image source={require('../../assets/Parkify.png')} style={styles.sidebarLogo} resizeMode="contain" />
-          <Text style={styles.sidebarBrand}>Parkify</Text>
-        </View>
-
-        <View style={styles.sidebarUserCard}>
-          <View style={[styles.sidebarAvatar, { overflow: 'hidden' }]}>
-            {user?.profilePicture ? (
-              <Image source={{ uri: getImageUrl(user.profilePicture) }} style={{ width: '100%', height: '100%' }} />
-            ) : (
-              <MaterialCommunityIcons name="account" size={36} color="#FFF" />
-            )}
-          </View>
-          <Text style={styles.sidebarUserName}>{user?.name?.toUpperCase() || 'OWNER'}</Text>
-          <Text style={styles.sidebarUserRole}>Parking Owner</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        <ScrollView style={styles.sidebarMenu} showsVerticalScrollIndicator={false}>
-          <TouchableOpacity style={styles.menuItem} onPress={() => { toggleSidebar(); navigation.navigate('ParkingOwnerDashboard'); }}>
-            <View style={styles.menuIconBox}><MaterialCommunityIcons name="view-dashboard" size={22} color="rgba(255,255,255,0.8)" /></View>
-            <Text style={styles.menuText}>Overview</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => { toggleSidebar(); navigation.navigate('ParkingPlaceList'); }}>
-            <View style={styles.menuIconBox}><MaterialCommunityIcons name="map-marker-radius" size={22} color="rgba(255,255,255,0.8)" /></View>
-            <Text style={styles.menuText}>Parking Places</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => { toggleSidebar(); navigation.navigate('ParkingOwnerProfile'); }}>
-            <View style={styles.menuIconBox}><MaterialCommunityIcons name="account-circle" size={22} color="rgba(255,255,255,0.8)" /></View>
-            <Text style={styles.menuText}>My Profile</Text>
-          </TouchableOpacity>
-        </ScrollView>
-
-        <View style={styles.divider} />
-        <TouchableOpacity style={styles.sidebarLogout} onPress={logout}>
-          <MaterialCommunityIcons name="logout" size={22} color="#FFF" />
-          <Text style={styles.logoutText}>Sign Out</Text>
-        </TouchableOpacity>
-        <Text style={styles.sidebarVersion}>Parkify v1.0.0</Text>
-      </Animated.View>
+      <ParkingOwnerSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
 
       <ScrollView style={styles.mainContent} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.responsiveContent}>

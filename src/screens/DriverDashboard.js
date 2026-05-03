@@ -49,7 +49,9 @@ const DriverDashboard = ({ navigation }) => {
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10;
+    },
     onPanResponderMove: (evt, gestureState) => {
       const { moveX, moveY } = gestureState;
       Animated.parallel([
@@ -214,8 +216,9 @@ const styles = StyleSheet.create({
   },
   responsiveContent: {
     width: '100%',
-    maxWidth: Platform.OS === 'web' ? 1200 : '100%',
+    maxWidth: Platform.OS === 'web' ? 800 : '100%',
     alignSelf: 'center',
+    flex: 1,
   },
   scrollContent: {
     padding: 20,

@@ -7,6 +7,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../services/api';
 import { COLORS, SHADOWS } from '../../theme/theme';
+import DriverSidebar from '../../components/DriverSidebar';
+import { Animated, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 const SLOTS = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00'];
 
@@ -22,6 +26,15 @@ const ServiceAppointmentScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
   const [fetchingVehicles, setFetchingVehicles] = useState(true);
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const [sidebarAnim] = useState(new Animated.Value(-width));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    const toValue = isSidebarOpen ? -width : 0;
+    Animated.timing(sidebarAnim, { toValue, duration: 300, useNativeDriver: false }).start();
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   useEffect(() => {
     fetchUserData();
@@ -121,7 +134,17 @@ const ServiceAppointmentScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
+      <DriverSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
+
       <View style={styles.header}>
+        <TouchableOpacity onPress={toggleSidebar} style={styles.backBtn}>
+          <MaterialCommunityIcons name="menu" size={26} color={COLORS.primary} />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={26} color={COLORS.primary} />
         </TouchableOpacity>

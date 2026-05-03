@@ -14,6 +14,8 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import DriverSidebar from '../../components/DriverSidebar';
+import { Animated } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -23,6 +25,15 @@ const SelectSlotScreen = ({ route, navigation }) => {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSlot, setSelectedSlot] = useState(null);
+
+  const [sidebarAnim] = useState(new Animated.Value(-width));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    const toValue = isSidebarOpen ? -width : 0;
+    Animated.timing(sidebarAnim, { toValue, duration: 300, useNativeDriver: false }).start();
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const fetchSlots = useCallback(async () => {
     try {
@@ -56,8 +67,19 @@ const SelectSlotScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
+      {/* Sidebar */}
+      <DriverSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
+
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={toggleSidebar} style={styles.backBtn}>
+          <MaterialCommunityIcons name="menu" size={28} color="#2D4057" />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={28} color="#2D4057" />
         </TouchableOpacity>

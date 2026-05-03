@@ -6,12 +6,23 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import api from '../../services/api';
 import { COLORS, SHADOWS } from '../../theme/theme';
+import DriverSidebar from '../../components/DriverSidebar';
+import { Animated } from 'react-native';
 
 const DriverInventoryScreen = ({ route, navigation }) => {
   const { placeId, parkingName } = route.params;
   const [selectedType, setSelectedType] = useState('FOOD'); // 'FOOD', 'SPARE_PART', 'FUEL'
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [sidebarAnim] = useState(new Animated.Value(-width));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    const toValue = isSidebarOpen ? -width : 0;
+    Animated.timing(sidebarAnim, { toValue, duration: 300, useNativeDriver: false }).start();
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const categories = [
     { id: 'FOOD', title: 'Food & Beverage', icon: 'food-fork-drink', color: '#F59E0B' },
@@ -87,8 +98,19 @@ const DriverInventoryScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
       
+      {/* Sidebar */}
+      <DriverSidebar 
+        isSidebarOpen={isSidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+        sidebarAnim={sidebarAnim} 
+        navigation={navigation} 
+      />
+
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={toggleSidebar} style={styles.backBtn}>
+          <MaterialCommunityIcons name="menu" size={26} color={COLORS.primary} />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={26} color={COLORS.primary} />
         </TouchableOpacity>
