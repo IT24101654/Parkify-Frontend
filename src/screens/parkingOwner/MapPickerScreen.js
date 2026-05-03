@@ -79,19 +79,35 @@ const MapPickerScreen = ({ navigation, route }) => {
     setSearching(true);
     Keyboard.dismiss();
     try {
-      const geo = await Location.geocodeAsync(searchQuery);
-      if (geo && geo.length > 0) {
-        const coords = { latitude: geo[0].latitude, longitude: geo[0].longitude };
-        const region = { ...coords, latitudeDelta: 0.01, longitudeDelta: 0.01 };
-        setMarkerCoords(coords);
-        setMapRegion(region);
-        mapRef.current?.animateToRegion(region, 600);
-        reverseGeocode(coords);
+      if (Platform.OS === 'web') {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+        const data = await response.json();
+        if (data && data.length > 0) {
+          const coords = { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+          const region = { ...coords, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+          setMarkerCoords(coords);
+          setMapRegion(region);
+          mapRef.current?.animateToRegion(region, 600);
+          reverseGeocode(coords);
+        } else {
+          alert("Location not found. Try a more specific address.");
+        }
       } else {
-        Alert.alert("Not Found", "Location not found. Try a more specific address or city name.");
+        const geo = await Location.geocodeAsync(searchQuery);
+        if (geo && geo.length > 0) {
+          const coords = { latitude: geo[0].latitude, longitude: geo[0].longitude };
+          const region = { ...coords, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+          setMarkerCoords(coords);
+          setMapRegion(region);
+          mapRef.current?.animateToRegion(region, 600);
+          reverseGeocode(coords);
+        } else {
+          Alert.alert("Not Found", "Location not found. Try a more specific address or city name.");
+        }
       }
     } catch (e) {
-      Alert.alert("Error", "Failed to search location.");
+      if (Platform.OS === 'web') alert("Failed to search location.");
+      else Alert.alert("Error", "Failed to search location.");
     } finally {
       setSearching(false);
     }

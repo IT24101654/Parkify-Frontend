@@ -170,9 +170,18 @@ const AddParkingPlaceScreen = ({ navigation, route }) => {
     if (!formData.slots) newErrors.slots = "Slot count is required";
     if (!formData.price) newErrors.price = "Hourly rate is required";
     if (!formData.location) newErrors.location = "Location description is required";
+    if (!formData.address) newErrors.address = "Full address is required";
+    if (!formData.latitude || !formData.longitude) {
+      Alert.alert("Location Missing", "Please select the parking location on the map.");
+      return false;
+    }
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const isValid = Object.keys(newErrors).length === 0;
+    if (!isValid) {
+      Alert.alert("Missing Information", "Please fill all required fields marked in red.");
+    }
+    return isValid;
   };
 
   const handleSubmit = async () => {
@@ -357,6 +366,7 @@ const AddParkingPlaceScreen = ({ navigation, route }) => {
         <InputField 
           label="Full Address" icon="map-marker" name="address" placeholder="123, Main Street, Colombo" 
           value={formData.address} onChangeText={(t) => handleInputChange('address', t)}
+          error={errors.address}
         />
         <InputField 
           label="Display Location" icon="map-marker-radius" name="location" placeholder="e.g. Near World Trade Center" 
