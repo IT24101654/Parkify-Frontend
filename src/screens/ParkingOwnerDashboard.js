@@ -1,42 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  ScrollView, Image, Dimensions, Animated, StatusBar
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  Image, Dimensions, Animated, PanResponder, StatusBar,
+  SafeAreaView, ActivityIndicator, Platform
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS, SHADOWS } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
-import { PanResponder, Alert } from 'react-native';
 import api from '../services/api';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// ── Feature Card (same style as DriverDashboard) ──
 const FeatureCard = ({ icon, title, desc, footerText, color, onPress }) => (
-  <TouchableOpacity style={[styles.featureCard, SHADOWS.medium]} onPress={onPress} activeOpacity={0.9}>
-    <View style={[styles.fcIconWrapper, { backgroundColor: color }]}>
-      <MaterialCommunityIcons name={icon} size={28} color="#FFF" />
+  <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.7}>
+    <View style={[styles.fcIconWrapper, { backgroundColor: `${color}15` }]}>
+      <MaterialCommunityIcons name={icon} size={28} color={color} />
     </View>
     <Text style={styles.fcTitle}>{title}</Text>
-    <Text style={styles.fcDesc}>{desc}</Text>
+    <Text style={styles.fcDesc} numberOfLines={2}>{desc}</Text>
     <View style={styles.fcFooter}>
-      <MaterialCommunityIcons name="chevron-right" size={16} color="#9C8C79" />
       <Text style={styles.fcFooterText}>{footerText}</Text>
+      <MaterialCommunityIcons name="chevron-right" size={14} color="#9C8C79" />
     </View>
   </TouchableOpacity>
 );
 
-
-
-// ── Main Dashboard ──
 const ParkingOwnerDashboard = ({ navigation }) => {
-  const { user, logout, updateUser, refreshUser } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const [sidebarAnim] = useState(new Animated.Value(-width));
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [earnings, setEarnings] = useState({ totalEarnings: 0, count: 0 });
 
-  // Interactive Background State (ITP Mesh Gradient)
+  // Background blobs animation
   const blob1Pos = useRef(new Animated.ValueXY({ x: width * 0.2, y: 100 })).current;
   const blob2Pos = useRef(new Animated.ValueXY({ x: width * 0.8, y: 300 })).current;
   const blob3Pos = useRef(new Animated.ValueXY({ x: width * 0.5, y: 500 })).current;
@@ -59,75 +52,32 @@ const ParkingOwnerDashboard = ({ navigation }) => {
   const hasInventory = user?.ownerServices?.hasInventory;
   const hasServiceCenter = user?.ownerServices?.hasServiceCenter;
 
+  useEffect(() => {
+    refreshUser();
+  }, []);
+
   const toggleSidebar = () => {
     const toValue = isSidebarOpen ? -width : 0;
     Animated.timing(sidebarAnim, { toValue, duration: 300, useNativeDriver: false }).start();
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const fetchEarnings = async () => {
+  const getImageUrl = (uri) => {
+    if (!uri) return null;
+    if (uri.startsWith('http') || uri.startsWith('data:')) return uri;
+    const formattedUri = uri.replace(/\\/g, '/');
+    const baseUrl = api.defaults.baseURL.replace('/api', '');
+    return `${baseUrl}/${formattedUri}`;
+  };
+
+  const handleToggleFeature = async (feature) => {
     try {
-      const res = await api.get('/payments/owner/earnings');
-      setEarnings(res.data);
-    } catch (error) {
-      console.error('Error fetching earnings:', error);
+      await api.post('/owner/toggle-service', { service: feature });
+      refreshUser();
+    } catch (e) {
+      console.error(e);
     }
   };
-
-  const handleToggleFeature = async (type) => {
-    const featureName = type === 'inventory' ? 'Inventory' : 'Service Center';
-    const isCurrentlyEnabled = type === 'inventory' ? user?.ownerServices?.hasInventory : user?.ownerServices?.hasServiceCenter;
-
-    Alert.alert(
-      `${isCurrentlyEnabled ? 'Disable' : 'Enable'} ${featureName}`,
-      `Would you like to ${isCurrentlyEnabled ? 'disable' : 'enable'} the ${featureName} feature?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: isCurrentlyEnabled ? 'Disable Now' : 'Enable Now', 
-          onPress: async () => {
-            try {
-              setLoading(true);
-              const currentServices = user?.ownerServices || { hasInventory: false, hasServiceCenter: false };
-              const services = { ...currentServices };
-              if (type === 'inventory') services.hasInventory = !isCurrentlyEnabled;
-              else services.hasServiceCenter = !isCurrentlyEnabled;
-
-              const res = await api.put('/auth/update-profile', { ownerServices: services });
-              await updateUser(res.data.user);
-              Alert.alert('Success', `${featureName} ${isCurrentlyEnabled ? 'disabled' : 'enabled'} successfully!`);
-            } catch (err) {
-              Alert.alert('Error', `Failed to update ${featureName}`);
-            } finally {
-              setLoading(false);
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', async () => {
-      sidebarAnim.setValue(-width);
-      setIsSidebarOpen(false);
-      fetchEarnings();
-      try { await refreshUser(); } catch (_) {}
-    });
-    return unsubscribe;
-  }, [navigation]);
-
-  const menuItems = [
-    { id: 'dashboard', title: 'Dashboard', icon: 'view-dashboard' },
-    { id: 'slots', title: 'Parking Slots', icon: 'car-brake-parking' },
-    { id: 'inventory', title: 'Inventory', icon: 'package-variant-closed' },
-    { id: 'service', title: 'Service Center', icon: 'store-cog' },
-    { id: 'reservations', title: 'Reservations', icon: 'calendar-check' },
-    { id: 'serviceBookings', title: 'Service Bookings', icon: 'hammer-wrench' },
-    { id: 'refunds', title: 'Refund Requests', icon: 'cash-refund' },
-    { id: 'earningsHistory', title: 'Earnings History', icon: 'chart-line' },
-    { id: 'profile', title: 'My Profile', icon: 'account-circle' },
-  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -142,25 +92,25 @@ const ParkingOwnerDashboard = ({ navigation }) => {
       </View>
       <View style={styles.bgGradientOverlay} />
 
-      {/* Overlay */}
+      {/* Sidebar Overlay */}
       {isSidebarOpen && (
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={toggleSidebar} />
       )}
 
-      {/* ── Sidebar ── */}
+      {/* Custom Sidebar */}
       <Animated.View style={[styles.sidebar, { left: sidebarAnim }]}>
-        {/* Logo */}
         <View style={styles.sidebarHeader}>
-          <Image source={require('../../assets/Parkify.png')} style={styles.sidebarLogo} resizeMode="contain" />
+          <Image source={require('../assets/Parkify.png')} style={styles.sidebarLogo} resizeMode="contain" />
           <Text style={styles.sidebarBrand}>Parkify</Text>
         </View>
 
-        {/* User card */}
         <View style={styles.sidebarUserCard}>
           <View style={[styles.sidebarAvatar, { overflow: 'hidden' }]}>
-            {user?.profilePicture
-              ? <Image source={{ uri: user.profilePicture }} style={{ width: '100%', height: '100%' }} />
-              : <MaterialCommunityIcons name="account" size={36} color="#FFF" />}
+            {user?.profilePicture ? (
+              <Image source={{ uri: getImageUrl(user.profilePicture) }} style={{ width: '100%', height: '100%' }} />
+            ) : (
+              <MaterialCommunityIcons name="account" size={36} color="#FFF" />
+            )}
           </View>
           <Text style={styles.sidebarUserName}>{user?.name?.toUpperCase() || 'OWNER'}</Text>
           <Text style={styles.sidebarUserRole}>Parking Owner</Text>
@@ -169,25 +119,18 @@ const ParkingOwnerDashboard = ({ navigation }) => {
         <View style={styles.divider} />
 
         <ScrollView style={styles.sidebarMenu} showsVerticalScrollIndicator={false}>
-          {menuItems.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.menuItem} onPress={() => {
-              toggleSidebar();
-              if (item.id === 'dashboard') return;
-              else if (item.id === 'profile') navigation.navigate('ParkingOwnerProfile');
-              else if (item.id === 'slots') navigation.navigate('ParkingPlaceList');
-              else if (item.id === 'reservations') navigation.navigate('OwnerReservations');
-              else if (item.id === 'inventory') navigation.navigate('Inventory');
-              else if (item.id === 'service') navigation.navigate('ServiceCenter');
-              else if (item.id === 'serviceBookings') navigation.navigate('OwnerServiceAppointments');
-              else if (item.id === 'refunds') navigation.navigate('OwnerRefunds');
-              else if (item.id === 'earningsHistory') navigation.navigate('OwnerEarnings');
-            }}>
-              <View style={styles.menuIconBox}>
-                <MaterialCommunityIcons name={item.icon} size={22} color="rgba(255,255,255,0.8)" />
-              </View>
-              <Text style={styles.menuText}>{item.title}</Text>
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity style={styles.menuItem} onPress={() => { toggleSidebar(); navigation.navigate('ParkingOwnerDashboard'); }}>
+            <View style={styles.menuIconBox}><MaterialCommunityIcons name="view-dashboard" size={22} color="rgba(255,255,255,0.8)" /></View>
+            <Text style={styles.menuText}>Overview</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => { toggleSidebar(); navigation.navigate('ParkingPlaceList'); }}>
+            <View style={styles.menuIconBox}><MaterialCommunityIcons name="map-marker-radius" size={22} color="rgba(255,255,255,0.8)" /></View>
+            <Text style={styles.menuText}>Parking Places</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => { toggleSidebar(); navigation.navigate('ParkingOwnerProfile'); }}>
+            <View style={styles.menuIconBox}><MaterialCommunityIcons name="account-circle" size={22} color="rgba(255,255,255,0.8)" /></View>
+            <Text style={styles.menuText}>My Profile</Text>
+          </TouchableOpacity>
         </ScrollView>
 
         <View style={styles.divider} />
@@ -198,139 +141,113 @@ const ParkingOwnerDashboard = ({ navigation }) => {
         <Text style={styles.sidebarVersion}>Parkify v1.0.0</Text>
       </Animated.View>
 
-      {/* ── Main Content ── */}
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-        {/* Navbar */}
-        <View style={styles.navbar}>
-          <TouchableOpacity onPress={toggleSidebar} style={styles.menuBtn}>
-            <MaterialCommunityIcons name="menu" size={28} color="#2D4057" />
-          </TouchableOpacity>
-          <View style={styles.navRight}>
-            <TouchableOpacity style={styles.notificationBtn}>
-              <MaterialCommunityIcons name="bell-outline" size={24} color="#7A868E" />
-              <View style={styles.notificationDot} />
+      <ScrollView style={styles.mainContent} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.responsiveContent}>
+          {/* Navbar */}
+          <View style={styles.navbar}>
+            <TouchableOpacity onPress={toggleSidebar} style={styles.menuBtn}>
+              <MaterialCommunityIcons name="menu" size={28} color="#2D4057" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.avatar, { overflow: 'hidden' }]} onPress={() => navigation.navigate('ParkingOwnerProfile')}>
-              {user?.profilePicture
-                ? <Image source={{ uri: user.profilePicture }} style={{ width: '100%', height: '100%' }} />
-                : <Text style={styles.avatarText}>{(user?.name || 'O')[0]?.toUpperCase()}</Text>}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeSubtitle}>Welcome to your Dashboard</Text>
-          <View style={styles.nameRow}>
-            <Text style={styles.welcomeTitle}>{user?.name || 'Parking Owner'}</Text>
-            <MaterialCommunityIcons name="hand-wave" size={24} color="#ED8936" style={{ marginLeft: 10 }} />
-          </View>
-          <View style={styles.welcomeDivider} />
-        </View>
-
-        {/* Earnings Summary Card */}
-        <View style={[styles.earningsCard, SHADOWS.medium]}>
-          <View style={styles.earningsHeader}>
-            <View style={styles.earningsIconBox}>
-              <MaterialCommunityIcons name="wallet" size={24} color="#FFF" />
+            <View style={styles.navRight}>
+              <TouchableOpacity style={styles.notificationBtn}>
+                <MaterialCommunityIcons name="bell-outline" size={26} color="#2D4057" />
+                <View style={styles.notificationDot} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('ParkingOwnerProfile')}>
+                {user?.profilePicture ? (
+                  <Image source={{ uri: getImageUrl(user.profilePicture) }} style={{ width: '100%', height: '100%', borderRadius: 20 }} />
+                ) : (
+                  <Text style={styles.avatarText}>{user?.name?.charAt(0).toUpperCase() || 'O'}</Text>
+                )}
+              </TouchableOpacity>
             </View>
-            <Text style={styles.earningsTitle}>Total Earnings</Text>
           </View>
-          <Text style={styles.earningsAmount}>Rs. {earnings.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</Text>
-          <View style={styles.earningsFooter}>
-            <Text style={styles.earningsSubText}>From {earnings.count} successful payments</Text>
-            <TouchableOpacity onPress={fetchEarnings}>
-              <MaterialCommunityIcons name="refresh" size={16} color="#B26969" />
-            </TouchableOpacity>
+
+          {/* Welcome Section */}
+          <View style={styles.welcomeSection}>
+            <Text style={styles.welcomeSubtitle}>Owner Dashboard</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.welcomeTitle}>{user?.name || 'Owner'}</Text>
+              <MaterialCommunityIcons name="star-circle" size={24} color="#ED8936" style={{ marginLeft: 10 }} />
+            </View>
+            <View style={styles.welcomeDivider} />
           </View>
-        </View>
 
-
-
-        {/* Section Header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Dashboard Features</Text>
-          <Text style={styles.sectionSubtitle}>Manage your parking operations</Text>
-        </View>
-
-        {/* Feature Cards Grid */}
-        <View style={styles.grid}>
-          <FeatureCard
-            icon="garage" title="My Parking Slots" desc="Manage slots & pricing"
-            footerText="Manage Listings" color="#6F7C80" onPress={() => navigation.navigate('ParkingPlaceList')} />
-          <FeatureCard
-            icon="book-open-variant" title="Reservations" desc="Bookings & confirmations"
-            footerText="Review Bookings" color="#B26969" onPress={() => navigation.navigate('OwnerReservations')} />
-          <FeatureCard
-            icon="cash-refund" title="Refunds" desc="Approve or reject refunds"
-            footerText="Action Required" color="#B08974" onPress={() => navigation.navigate('OwnerRefunds')} />
-          <FeatureCard
-            icon="chart-line" title="Earnings" desc="Revenue & financial reports"
-            footerText="Financial Insights" color="#7A806B" onPress={() => navigation.navigate('OwnerEarnings')} />
-
-          {hasInventory ? (
+          {/* Feature Grid */}
+          <View style={styles.grid}>
             <FeatureCard
-              icon="package-variant-closed" title="Inventory" desc="Track & restock accessories"
-              footerText="Shop Inventory" color="#4A5568" onPress={() => navigation.navigate('Inventory')} />
-          ) : (
-            <TouchableOpacity 
-              style={[styles.featureCard, styles.addCard, SHADOWS.medium]} 
-              activeOpacity={0.9}
-              onPress={() => handleToggleFeature('inventory')}
-            >
-              <View style={[styles.fcIconWrapper, { backgroundColor: '#E2E8F0' }]}>
-                <MaterialCommunityIcons name="plus-circle-outline" size={28} color="#718096" />
-              </View>
-              <Text style={[styles.fcTitle, { color: '#718096' }]}>Add Inventory</Text>
-              <Text style={styles.fcDesc}>Sell accessories & parts</Text>
-              <View style={styles.fcFooter}>
-                <MaterialCommunityIcons name="auto-fix" size={16} color="#9C8C79" />
-                <Text style={styles.fcFooterText}>Enable Feature</Text>
-              </View>
-            </TouchableOpacity>
-          )}
+              icon="map-marker-plus" title="Parking Places" desc="Manage your locations"
+              footerText="View All" color="#B08974" onPress={() => navigation.navigate('ParkingPlaceList')} />
 
-          {hasServiceCenter ? (
-            <>
-              <FeatureCard
-                icon="car-wrench" title="Service Center" desc="Manage repair settings"
-                footerText="Settings" color="#2D6A4F" onPress={() => navigation.navigate('ServiceCenter')} />
-              <FeatureCard
-                icon="tools" title="Service Bookings" desc="Manage service appointments"
-                footerText="View" color="#C05621" onPress={() => navigation.navigate('OwnerServiceAppointments')} />
-            </>
-          ) : (
-            <TouchableOpacity 
-              style={[styles.featureCard, styles.addCard, SHADOWS.medium]} 
-              activeOpacity={0.9}
-              onPress={() => handleToggleFeature('service')}
-            >
-              <View style={[styles.fcIconWrapper, { backgroundColor: '#E2E8F0' }]}>
-                <MaterialCommunityIcons name="plus-circle-outline" size={28} color="#718096" />
-              </View>
-              <Text style={[styles.fcTitle, { color: '#718096' }]}>Add Service Center</Text>
-              <Text style={styles.fcDesc}>Vehicle repairs & maintenance</Text>
-              <View style={styles.fcFooter}>
-                <MaterialCommunityIcons name="auto-fix" size={16} color="#9C8C79" />
-                <Text style={styles.fcFooterText}>Enable Feature</Text>
-              </View>
-            </TouchableOpacity>
-          )}
+            <FeatureCard
+              icon="calendar-check" title="Reservations" desc="Recent slot bookings"
+              footerText="View History" color="#B26969" onPress={() => {}} />
 
-          <FeatureCard
-            icon="account-circle" title="My Profile" desc="Profile & account settings"
-            footerText="Profile Settings" color="#2D4057" onPress={() => navigation.navigate('ParkingOwnerProfile')} />
+            {hasInventory ? (
+              <FeatureCard
+                icon="package-variant" title="Inventory" desc="Manage parts & accessories"
+                footerText="Manage Shop" color="#7A806B" onPress={() => navigation.navigate('Inventory')} />
+            ) : (
+              <TouchableOpacity
+                style={[styles.featureCard, { opacity: 0.8, borderStyle: 'dashed', borderWidth: 1, borderColor: '#CBD5E0' }]}
+                onPress={() => handleToggleFeature('inventory')}
+              >
+                <View style={[styles.fcIconWrapper, { backgroundColor: '#E2E8F0' }]}>
+                  <MaterialCommunityIcons name="plus-circle-outline" size={28} color="#718096" />
+                </View>
+                <Text style={[styles.fcTitle, { color: '#718096' }]}>Add Inventory</Text>
+                <Text style={styles.fcDesc}>Sell accessories & parts</Text>
+                <View style={styles.fcFooter}>
+                  <MaterialCommunityIcons name="auto-fix" size={16} color="#9C8C79" />
+                  <Text style={styles.fcFooterText}>Enable Feature</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {hasServiceCenter ? (
+              <>
+                <FeatureCard
+                  icon="car-wrench" title="Service Center" desc="Manage repair settings"
+                  footerText="Settings" color="#2D6A4F" onPress={() => navigation.navigate('ServiceCenter')} />
+                <FeatureCard
+                  icon="tools" title="Service Bookings" desc="Manage service appointments"
+                  footerText="Appointments" color="#4A5568" onPress={() => {}} />
+              </>
+            ) : (
+              <TouchableOpacity
+                style={[styles.featureCard, { opacity: 0.8, borderStyle: 'dashed', borderWidth: 1, borderColor: '#CBD5E0' }]}
+                onPress={() => handleToggleFeature('serviceCenter')}
+              >
+                <View style={[styles.fcIconWrapper, { backgroundColor: '#E2E8F0' }]}>
+                  <MaterialCommunityIcons name="plus-circle-outline" size={28} color="#718096" />
+                </View>
+                <Text style={[styles.fcTitle, { color: '#718096' }]}>Service Center</Text>
+                <Text style={styles.fcDesc}>Offer vehicle repairs</Text>
+                <View style={styles.fcFooter}>
+                  <MaterialCommunityIcons name="auto-fix" size={16} color="#9C8C79" />
+                  <Text style={styles.fcFooterText}>Enable Feature</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            <FeatureCard
+              icon="account-circle" title="My Profile" desc="Profile & account settings"
+              footerText="Profile Settings" color="#2D4057" onPress={() => navigation.navigate('ParkingOwnerProfile')} />
+          </View>
         </View>
-
-
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  container: { flex: 1, backgroundColor: '#FFF', width: '100%' },
+  mainContent: { flex: 1, width: '100%' },
+  responsiveContent: {
+    width: '100%',
+    maxWidth: Platform.OS === 'web' ? 1200 : '100%',
+    alignSelf: 'center',
+  },
   scrollContent: { padding: 20, paddingTop: 10, paddingBottom: 40 },
 
   // Navbar
@@ -341,57 +258,32 @@ const styles = StyleSheet.create({
   avatarText: { color: '#FFF', fontWeight: 'bold' },
   notificationBtn: { position: 'relative' },
   notificationDot: { position: 'absolute', top: 0, right: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#B26969', borderWidth: 1.5, borderColor: '#FFF' },
-  
-  // Earnings Card
-  earningsCard: { backgroundColor: '#FFF', borderRadius: 24, padding: 20, marginBottom: 30, borderWidth: 1, borderColor: '#EDF2F7' },
-  earningsHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-  earningsIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#B26969', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  earningsTitle: { fontSize: 16, fontWeight: '700', color: '#718096' },
-  earningsAmount: { fontSize: 32, fontWeight: '900', color: '#2D3748', marginBottom: 10 },
-  earningsFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#F7FAFC', paddingTop: 12 },
-  earningsSubText: { fontSize: 13, color: '#A0AEC0', fontWeight: '600' },
 
-  // Welcome Section
+  // Welcome
   welcomeSection: { alignItems: 'center', marginBottom: 30, marginTop: 15 },
   welcomeSubtitle: { fontSize: 24, fontWeight: '900', color: '#B26969', letterSpacing: -0.5, textAlign: 'center' },
   nameRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
   welcomeTitle: { fontSize: 28, fontWeight: '800', color: '#2D4057', textAlign: 'center' },
   welcomeDivider: { width: 40, height: 3, backgroundColor: '#ED8936', borderRadius: 2, marginTop: 10, opacity: 0.8 },
 
-
-
-  // Section header
-  sectionHeader: { alignItems: 'center', marginBottom: 20 },
-  sectionTitle: { fontSize: 24, fontWeight: '800', color: '#B08974', textAlign: 'center', letterSpacing: -0.5 },
-  sectionSubtitle: { fontSize: 13, color: '#9C8C79', fontWeight: '600', textAlign: 'center', marginTop: 4 },
-
-  // Grid
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  featureCard: { width: '47%', backgroundColor: '#FFF', borderRadius: 20, padding: 15, marginBottom: 20 },
-  addCard: { borderWidth: 2, borderColor: '#E2E8F0', borderStyle: 'dashed', backgroundColor: 'rgba(255,255,255,0.6)' },
+  // Feature Cards
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' },
+  featureCard: {
+    width: '47%', backgroundColor: '#FFF', borderRadius: 20, padding: 15, marginBottom: 20,
+    borderWidth: 1, borderColor: '#F0F0F0', elevation: 2,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5,
+  },
   fcIconWrapper: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  fcTitle: { fontSize: 14, fontWeight: '800', color: '#2D4057', marginBottom: 4 },
+  fcTitle: { fontSize: 15, fontWeight: '800', color: '#2D4057', marginBottom: 4 },
   fcDesc: { fontSize: 11, color: '#7A868E', marginBottom: 12, lineHeight: 16 },
-  fcFooter: { flexDirection: 'row', alignItems: 'center', gap: 4, borderTopWidth: 1, borderTopColor: '#F7FAFC', paddingTop: 8 },
+  fcFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#F7FAFC', paddingTop: 8 },
   fcFooterText: { fontSize: 10, color: '#9C8C79', fontWeight: '700', textTransform: 'uppercase' },
-
-  sidebarVersion: { textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: '600', marginTop: 12 },
 
   // Overlay
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 2000 },
 
   // Sidebar
-  sidebar: { 
-    position: 'absolute', 
-    top: 0, 
-    bottom: 0, 
-    width: width * 0.75, 
-    backgroundColor: '#2D4057', 
-    zIndex: 3000, 
-    padding: 20,
-    paddingTop: 40,
-    paddingBottom: 30,
-  },
+  sidebar: { position: 'absolute', top: 0, bottom: 0, width: width * 0.75, backgroundColor: '#2D4057', zIndex: 3000, padding: 20, paddingTop: 40, paddingBottom: 30 },
   sidebarHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   sidebarLogo: { width: 30, height: 30 },
   sidebarBrand: { fontSize: 20, fontWeight: '900', color: '#FFF', letterSpacing: 1 },
@@ -406,26 +298,12 @@ const styles = StyleSheet.create({
   menuText: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
   sidebarLogout: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#B26969', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, marginTop: 10, marginBottom: 5 },
   logoutText: { fontSize: 14, fontWeight: '800', color: '#FFF' },
+  sidebarVersion: { textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: '600', marginTop: 10 },
 
   // Background Mesh
-  bgGradientOverlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
-    zIndex: -1,
-  },
-  bgWrapper: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: -2,
-    backgroundColor: '#d1c9ba',
-  },
-  blob: {
-    position: 'absolute',
-    width: 350,
-    height: 350,
-    borderRadius: 175,
-    opacity: 0.5,
-  },
+  bgGradientOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255, 255, 255, 0.88)', zIndex: -1 },
+  bgWrapper: { ...StyleSheet.absoluteFillObject, zIndex: -2, backgroundColor: '#d1c9ba' },
+  blob: { position: 'absolute', width: 350, height: 350, borderRadius: 175, opacity: 0.5 },
   blob1: { backgroundColor: '#F2C6AF' },
   blob2: { backgroundColor: '#BDAD9C' },
   blob3: { backgroundColor: '#BBC4A0' },
