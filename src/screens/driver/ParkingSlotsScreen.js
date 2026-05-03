@@ -188,14 +188,17 @@ const ParkingSlotsScreen = ({ navigation }) => {
     return `${baseUrl}/uploads/parking-photos/${imagePath}`;
   };
 
+  const [failedImages, setFailedImages] = useState({});
+
   const renderPlaceItem = ({ item }) => (
     <TouchableOpacity
       style={styles.placeItem}
       onPress={() => handleMarkerPress(item)}
     >
       <Image
-        source={item.placeImage ? { uri: getImageUrl(item.placeImage) } : require('../../../assets/Parkify.png')}
+        source={(item.placeImage && !failedImages[item._id]) ? { uri: getImageUrl(item.placeImage) } : require('../../../assets/Parkify.png')}
         style={styles.placeImage}
+        onError={() => setFailedImages(prev => ({...prev, [item._id]: true}))}
       />
       <View style={styles.placeInfo}>
         <View style={styles.placeHeader}>
@@ -334,8 +337,9 @@ const ParkingSlotsScreen = ({ navigation }) => {
 
           <ScrollView showsVerticalScrollIndicator={false}>
             <Image
-              source={selectedPlace.placeImage ? { uri: getImageUrl(selectedPlace.placeImage) } : require('../../../assets/Parkify.png')}
+              source={(selectedPlace.placeImage && !failedImages[selectedPlace._id]) ? { uri: getImageUrl(selectedPlace.placeImage) } : require('../../../assets/Parkify.png')}
               style={styles.cardImage}
+              onError={() => setFailedImages(prev => ({...prev, [selectedPlace._id]: true}))}
             />
 
             <View style={styles.cardContent}>
