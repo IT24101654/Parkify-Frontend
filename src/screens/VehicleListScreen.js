@@ -96,9 +96,24 @@ const VehicleListScreen = ({ navigation }) => {
   const getImageUrl = (uri) => {
     if (!uri) return null;
     if (uri.startsWith('http')) return uri;
-    const formattedUri = uri.replace(/\\/g, '/');
-    const baseUrl = api.defaults.baseURL.replace('/api', '');
-    return `${baseUrl}/${formattedUri}`;
+    
+    // Normalize slashes
+    const cleanUri = uri.replace(/\\/g, '/');
+    
+    // Get base URL without /api suffix
+    let baseUrl = api.defaults.baseURL;
+    if (baseUrl.endsWith('/api')) {
+      baseUrl = baseUrl.slice(0, -4);
+    } else if (baseUrl.endsWith('/api/')) {
+      baseUrl = baseUrl.slice(0, -5);
+    }
+    
+    // Remove leading slash from uri if present to avoid double slashes
+    const path = cleanUri.startsWith('/') ? cleanUri.slice(1) : cleanUri;
+    
+    const finalUrl = `${baseUrl}/${path}`;
+    console.log('Vehicle Image URL:', finalUrl);
+    return finalUrl;
   };
 
   const renderItem = ({ item }) => (
