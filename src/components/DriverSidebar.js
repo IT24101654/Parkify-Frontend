@@ -124,13 +124,14 @@ const styles = StyleSheet.create({
     width: Platform.OS === 'web' ? 300 : width * 0.8,
     backgroundColor: '#1A202C',
     zIndex: 3000,
-    paddingVertical: 20,
+    paddingVertical: 10,
     paddingHorizontal: 15,
+    paddingBottom: 40,
   },
   sidebarHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 15,
     paddingHorizontal: 10,
   },
   sidebarLogo: {
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
     padding: 15,
     borderRadius: 16,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   sidebarAvatar: {
     width: 50,
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 12,
     marginBottom: 4,
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: 'rgba(229, 62, 62, 0.1)',
     borderRadius: 12,
-    marginTop: 10,
+    marginTop: 5,
   },
   logoutText: {
     color: '#FFF',
