@@ -56,27 +56,7 @@ const DriverDashboard = ({ navigation }) => {
   const [sidebarAnim] = useState(new Animated.Value(-width));
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Background blobs animation
-  const blob1Pos = useRef(new Animated.ValueXY({ x: width * 0.1, y: 100 })).current;
-  const blob2Pos = useRef(new Animated.ValueXY({ x: width * 0.7, y: 400 })).current;
-  const blob3Pos = useRef(new Animated.ValueXY({ x: width * 0.4, y: 700 })).current;
-  const blob4Pos = useRef(new Animated.ValueXY({ x: width * 0.8, y: 150 })).current;
-
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10;
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      const { moveX, moveY } = gestureState;
-      Animated.parallel([
-        Animated.spring(blob1Pos, { toValue: { x: moveX - 150, y: moveY - 150 }, useNativeDriver: false, friction: 10 }),
-        Animated.spring(blob2Pos, { toValue: { x: width - moveX - 100, y: height - moveY - 100 }, useNativeDriver: false, friction: 12 }),
-        Animated.spring(blob3Pos, { toValue: { x: moveX - 100, y: moveY + 100 }, useNativeDriver: false, friction: 15 }),
-        Animated.spring(blob4Pos, { toValue: { x: width - moveX + 50, y: moveY - 200 }, useNativeDriver: false, friction: 20 }),
-      ]).start();
-    }
-  });
+  // Background mesh removed for performance
 
   useEffect(() => {
     refreshUser();
@@ -187,15 +167,6 @@ const DriverDashboard = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-
-      {/* Interactive Background Elements (ITP Style Mesh Gradient) */}
-      <View style={styles.bgWrapper} {...panResponder.panHandlers}>
-        <Animated.View style={[styles.blob, styles.blob1, { transform: blob1Pos.getTranslateTransform() }]} />
-        <Animated.View style={[styles.blob, styles.blob2, { transform: blob2Pos.getTranslateTransform() }]} />
-        <Animated.View style={[styles.blob, styles.blob3, { transform: blob3Pos.getTranslateTransform() }]} />
-        <Animated.View style={[styles.blob, styles.blob4, { transform: blob4Pos.getTranslateTransform() }]} />
-      </View>
-      <View style={styles.bgGradientOverlay} />
 
       {/* Driver Sidebar */}
       <DriverSidebar 
