@@ -146,6 +146,14 @@ const DriverDashboard = ({ navigation }) => {
     return unsubscribe;
   }, [navigation]);
 
+  const getImageUrl = (uri) => {
+    if (!uri) return null;
+    if (uri.startsWith('http') || uri.startsWith('data:')) return uri;
+    const formattedUri = uri.replace(/\\/g, '/');
+    const baseUrl = api.defaults.baseURL.replace('/api', '');
+    return `${baseUrl}/${formattedUri}`;
+  };
+
   const menuItems = [
     { id: 'overview', title: 'Overview', icon: 'view-dashboard' },
     { id: 'slots', title: 'Parking Slots', icon: 'map-marker-radius' },
@@ -193,7 +201,7 @@ const DriverDashboard = ({ navigation }) => {
         <View style={styles.sidebarUserCard}>
           <View style={[styles.sidebarAvatar, { overflow: 'hidden' }]}>
             {user?.profilePicture ? (
-              <Image source={{ uri: user.profilePicture }} style={{ width: '100%', height: '100%' }} />
+              <Image source={{ uri: getImageUrl(user.profilePicture) }} style={{ width: '100%', height: '100%' }} />
             ) : (
               <MaterialCommunityIcons name="account" size={36} color="#FFF" />
             )}
@@ -243,7 +251,7 @@ const DriverDashboard = ({ navigation }) => {
             </TouchableOpacity>
             <TouchableOpacity style={[styles.avatar, { overflow: 'hidden' }]} onPress={() => navigation.navigate('DriverProfile')}>
               {user?.profilePicture ? (
-                <Image source={{ uri: user.profilePicture }} style={{ width: '100%', height: '100%' }} />
+                <Image source={{ uri: getImageUrl(user.profilePicture) }} style={{ width: '100%', height: '100%' }} />
               ) : (
                 <Text style={styles.avatarText}>{(user?.name || 'D')[0]?.toUpperCase()}</Text>
               )}

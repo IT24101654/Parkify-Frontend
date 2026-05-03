@@ -142,9 +142,15 @@ const AddVehicleScreen = ({ navigation }) => {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.headerTitleRow}>
-            <Text style={styles.headerTitle}>Add New Vehicle</Text>
-            <Text style={styles.headerSubtitle}>Enter your vehicle details below</Text>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <MaterialCommunityIcons name="arrow-left" size={28} color="#2D4057" />
+            </TouchableOpacity>
+            <View style={styles.headerCenter}>
+              <Text style={styles.headerTitle}>Add New Vehicle</Text>
+              <Text style={styles.headerSubtitle}>Enter your vehicle details below</Text>
+            </View>
+            <View style={{ width: 28 }} />
           </View>
 
           <View style={[styles.formCard, SHADOWS.medium]}>
@@ -244,9 +250,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
   },
-  headerTitleRow: {
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 25,
+  },
+  backBtn: {
+    padding: 4,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 24,

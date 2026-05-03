@@ -7,7 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={[styles.container, Platform.OS === 'web' && styles.webContainer]}>
+    <GestureHandlerRootView style={styles.container}>
       <AuthProvider>
         <AppNavigator />
         <StatusBar style="light" backgroundColor="#1E1E1E" />
@@ -21,9 +21,5 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1E1E1E',
   },
-  webContainer: {
-    height: '100%',
-    width: '100%',
-    display: 'flex',
-  }
+
 });
