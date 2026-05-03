@@ -155,7 +155,9 @@ const InventoryScreen = ({ navigation, route }) => {
       fetchItems();
       Alert.alert('Success', `Item ${editingId ? 'updated' : 'added'} successfully!`);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save item.');
+      console.error('Inventory Save Error:', error);
+      const msg = error.response?.data?.error || error.response?.data?.message || 'Failed to save item.';
+      Alert.alert('Error', msg);
     }
   };
 
@@ -196,7 +198,16 @@ const InventoryScreen = ({ navigation, route }) => {
           </View>
           <View style={styles.itemActions}>
             <TouchableOpacity style={styles.actionBtn} onPress={() => {
-              setForm({ ...item, quantity: item.quantity.toString(), unitPrice: item.unitPrice.toString(), thresholdValue: item.thresholdValue.toString() });
+              const formattedExpiry = item.expiryDate ? item.expiryDate.split('T')[0] : '';
+              const formattedRestock = item.lastRestockDate ? item.lastRestockDate.split('T')[0] : '';
+              setForm({ 
+                ...item, 
+                quantity: item.quantity.toString(), 
+                unitPrice: item.unitPrice.toString(), 
+                thresholdValue: item.thresholdValue.toString(),
+                expiryDate: formattedExpiry,
+                lastRestockDate: formattedRestock
+              });
               setEditingId(item._id);
               setShowForm(true);
             }}>
