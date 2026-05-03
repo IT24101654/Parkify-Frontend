@@ -1,12 +1,17 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 // Use your computer's actual IP address so it works on BOTH Emulator and Physical Phone
 // Actual Render Backend URL
 const PRODUCTION_URL = 'https://parkify-backend-0nwc.onrender.com/api'; 
 const LOCAL_URL = 'http://172.20.10.13:5000/api';
 
-const BASE_URL = typeof window !== 'undefined' && !window.location.hostname.includes('localhost') 
+// Safe check for Web vs Native
+const isWeb = Platform.OS === 'web';
+const isProductionWeb = isWeb && typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+
+const BASE_URL = isProductionWeb || !__DEV__
   ? PRODUCTION_URL 
   : LOCAL_URL;
 
