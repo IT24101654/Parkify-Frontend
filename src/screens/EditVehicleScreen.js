@@ -70,8 +70,14 @@ const EditVehicleScreen = ({ route, navigation }) => {
   };
 
   const pickImage = async (imageType) => {
+    if (Platform.OS === 'web') {
+      // Web doesn't support 3-button Alert.alert well, default to gallery
+      handleImageSource(imageType, 'gallery');
+      return;
+    }
+
     Alert.alert(
-      'Select ImageSource',
+      'Select Image Source',
       'Choose where to get the image from',
       [
         { text: 'Camera', onPress: () => handleImageSource(imageType, 'camera') },
@@ -129,21 +135,33 @@ const EditVehicleScreen = ({ route, navigation }) => {
         data.append('fuelType', formData.fuelType);
 
         if (isNewVehicleImage) {
-          const extension = vehicleImage.split('.').pop().toLowerCase();
-          data.append('vehicleImage', {
-            uri: Platform.OS === 'android' ? vehicleImage : vehicleImage.replace('file://', ''),
-            name: `v_${Date.now()}.${extension}`,
-            type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
-          });
+          if (Platform.OS === 'web') {
+            const response = await fetch(vehicleImage);
+            const blob = await response.blob();
+            data.append('vehicleImage', blob, `v_${Date.now()}.jpg`);
+          } else {
+            const extension = vehicleImage.split('.').pop().toLowerCase();
+            data.append('vehicleImage', {
+              uri: Platform.OS === 'android' ? vehicleImage : vehicleImage.replace('file://', ''),
+              name: `v_${Date.now()}.${extension}`,
+              type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
+            });
+          }
         }
 
         if (isNewLicenseImage) {
-          const extension = licenseImage.split('.').pop().toLowerCase();
-          data.append('licenseImage', {
-            uri: Platform.OS === 'android' ? licenseImage : licenseImage.replace('file://', ''),
-            name: `l_${Date.now()}.${extension}`,
-            type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
-          });
+          if (Platform.OS === 'web') {
+            const response = await fetch(licenseImage);
+            const blob = await response.blob();
+            data.append('licenseImage', blob, `l_${Date.now()}.jpg`);
+          } else {
+            const extension = licenseImage.split('.').pop().toLowerCase();
+            data.append('licenseImage', {
+              uri: Platform.OS === 'android' ? licenseImage : licenseImage.replace('file://', ''),
+              name: `l_${Date.now()}.${extension}`,
+              type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
+            });
+          }
         }
 
         response = await api.put(`/vehicles/${id}`, data, {

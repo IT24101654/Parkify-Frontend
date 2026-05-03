@@ -31,22 +31,19 @@ const AddVehicleScreen = ({ navigation }) => {
   });
 
   const pickImage = async (imageType) => {
+    if (Platform.OS === 'web') {
+      // Web doesn't support 3-button Alert.alert, default to gallery
+      handleImageSource(imageType, 'gallery');
+      return;
+    }
+
     Alert.alert(
-      'Select ImageSource',
+      'Select Image Source',
       'Choose where to get the image from',
       [
-        {
-          text: 'Camera',
-          onPress: () => handleImageSource(imageType, 'camera'),
-        },
-        {
-          text: 'Gallery',
-          onPress: () => handleImageSource(imageType, 'gallery'),
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
+        { text: 'Camera', onPress: () => handleImageSource(imageType, 'camera') },
+        { text: 'Gallery', onPress: () => handleImageSource(imageType, 'gallery') },
+        { text: 'Cancel', style: 'cancel' },
       ]
     );
   };
@@ -97,27 +94,37 @@ const AddVehicleScreen = ({ navigation }) => {
       data.append('fuelType', formData.fuelType);
 
       if (vehicleImage) {
-        const uriParts = vehicleImage.split('.');
-        const extension = uriParts[uriParts.length - 1].toLowerCase();
-        const type = extension === 'jpg' ? 'jpeg' : extension;
-        
-        data.append('vehicleImage', {
-          uri: Platform.OS === 'android' ? vehicleImage : vehicleImage.replace('file://', ''),
-          name: `vehicle_${Date.now()}.${extension}`,
-          type: `image/${type}`,
-        });
+        if (Platform.OS === 'web') {
+          const response = await fetch(vehicleImage);
+          const blob = await response.blob();
+          data.append('vehicleImage', blob, `vehicle_${Date.now()}.jpg`);
+        } else {
+          const uriParts = vehicleImage.split('.');
+          const extension = uriParts[uriParts.length - 1].toLowerCase();
+          const type = extension === 'jpg' ? 'jpeg' : extension;
+          data.append('vehicleImage', {
+            uri: Platform.OS === 'android' ? vehicleImage : vehicleImage.replace('file://', ''),
+            name: `vehicle_${Date.now()}.${extension}`,
+            type: `image/${type}`,
+          });
+        }
       }
 
       if (licenseImage) {
-        const uriParts = licenseImage.split('.');
-        const extension = uriParts[uriParts.length - 1].toLowerCase();
-        const type = extension === 'jpg' ? 'jpeg' : extension;
-
-        data.append('licenseImage', {
-          uri: Platform.OS === 'android' ? licenseImage : licenseImage.replace('file://', ''),
-          name: `license_${Date.now()}.${extension}`,
-          type: `image/${type}`,
-        });
+        if (Platform.OS === 'web') {
+          const response = await fetch(licenseImage);
+          const blob = await response.blob();
+          data.append('licenseImage', blob, `license_${Date.now()}.jpg`);
+        } else {
+          const uriParts = licenseImage.split('.');
+          const extension = uriParts[uriParts.length - 1].toLowerCase();
+          const type = extension === 'jpg' ? 'jpeg' : extension;
+          data.append('licenseImage', {
+            uri: Platform.OS === 'android' ? licenseImage : licenseImage.replace('file://', ''),
+            name: `license_${Date.now()}.${extension}`,
+            type: `image/${type}`,
+          });
+        }
       }
 
       await api.post('/vehicles', data, {

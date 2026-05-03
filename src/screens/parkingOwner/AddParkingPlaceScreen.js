@@ -203,14 +203,19 @@ const AddParkingPlaceScreen = ({ navigation, route }) => {
       // Handle Image Upload
       if (image && !image.startsWith('http') && savedPlaceId) {
         const formDataImg = new FormData();
-        const uriParts = image.split('.');
-        const fileType = uriParts[uriParts.length - 1];
-
-        formDataImg.append('file', {
-          uri: image,
-          name: `parking_${savedPlaceId}.${fileType}`,
-          type: `image/${fileType}`,
-        });
+        if (Platform.OS === 'web') {
+          const response = await fetch(image);
+          const blob = await response.blob();
+          formDataImg.append('file', blob, `parking_${savedPlaceId}.jpg`);
+        } else {
+          const uriParts = image.split('.');
+          const fileType = uriParts[uriParts.length - 1];
+          formDataImg.append('file', {
+            uri: Platform.OS === 'android' ? image : image.replace('file://', ''),
+            name: `parking_${savedPlaceId}.${fileType}`,
+            type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
+          });
+        }
 
         await api.post(`/parking/${savedPlaceId}/upload-image`, formDataImg, {
           headers: { 'Content-Type': 'multipart/form-data' },

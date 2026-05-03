@@ -22,7 +22,8 @@
       },
       "splash": {
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.it24101654.parkifyapp"
     },
     "web": {
       "favicon": "./assets/Parkify.png",
@@ -38,6 +39,11 @@
     "plugins": [
       "expo-font",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6cb9c15a-24f7-44fe-b30e-b1df284676a8"
+      }
+    }
   }
 }
