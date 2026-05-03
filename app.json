@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Parkify",
+    "slug": "parkifyapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/Parkify.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#FFFFFF"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.it24101654.parkifyapp"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/car-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "splash": {
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.it24101654.parkifyapp"
+    },
+    "web": {
+      "favicon": "./assets/Parkify.png",
+      "bundler": "metro",
+      "display": "standalone",
+      "backgroundColor": "#121212",
+      "meta": {
+        "apple-mobile-web-app-capable": "yes",
+        "apple-mobile-web-app-status-bar-style": "black-translucent",
+        "apple-mobile-web-app-title": "Parkify"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6cb9c15a-24f7-44fe-b30e-b1df284676a8"
+      }
+    }
+  }
+}
