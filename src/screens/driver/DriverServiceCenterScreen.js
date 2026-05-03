@@ -4,7 +4,7 @@ import {
   FlatList, StatusBar, SafeAreaView, ActivityIndicator, Linking, Image
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import api from '../../services/api';
+import api, { getImageUrl } from '../../services/api';
 import { COLORS, SHADOWS } from '../../theme/theme';
 import DriverSidebar from '../../components/DriverSidebar';
 import { Animated, Dimensions } from 'react-native';
@@ -66,15 +66,12 @@ const DriverServiceCenterScreen = ({ route, navigation }) => {
     }
   };
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
-    const baseUrl = api.defaults.baseURL.replace('/api', '');
-    return `${baseUrl}/uploads/service-photos/${imagePath}`;
+  const getImageUrlLocal = (imagePath) => {
+    return getImageUrl(imagePath, 'service');
   };
 
   const renderServiceItem = ({ item }) => {
-    const imageUrl = getImageUrl(item.image);
+    const imageUrl = getImageUrlLocal(item.image);
     return (
       <View style={styles.serviceItem}>
         <View style={styles.serviceImageContainer}>

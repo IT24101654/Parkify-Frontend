@@ -4,10 +4,12 @@ import {
   FlatList, Dimensions, StatusBar, SafeAreaView, ActivityIndicator, Image
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import api from '../../services/api';
+import api, { getImageUrl } from '../../services/api';
 import { COLORS, SHADOWS } from '../../theme/theme';
 import DriverSidebar from '../../components/DriverSidebar';
-import { Animated } from 'react-native';
+import { Animated, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 const DriverInventoryScreen = ({ route, navigation }) => {
   const { placeId, parkingName } = route.params;
@@ -58,15 +60,12 @@ const DriverInventoryScreen = ({ route, navigation }) => {
     fetchItems();
   }, [fetchItems]);
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
-    const baseUrl = api.defaults.baseURL.replace('/api', '');
-    return `${baseUrl}/uploads/inventory-photos/${imagePath}`;
+  const getImageUrlLocal = (imagePath) => {
+    return getImageUrl(imagePath, 'inventory');
   };
 
   const renderItem = ({ item }) => {
-    const imageUrl = getImageUrl(item.image);
+    const imageUrl = getImageUrlLocal(item.image);
     return (
       <View style={[styles.card, SHADOWS.small]}>
         <View style={styles.cardContent}>

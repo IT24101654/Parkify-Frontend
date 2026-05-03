@@ -22,7 +22,7 @@ import DriverSidebar from '../../components/DriverSidebar';
 import MapView, { Marker, Circle, UrlTile } from '../../components/MapView';
 
 import * as Location from 'expo-location';
-import api from '../../services/api';
+import api, { getImageUrl } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const { width, height } = Dimensions.get('window');
@@ -201,20 +201,8 @@ const ParkingSlotsScreen = ({ navigation }) => {
     return d < 1 ? `${(d * 1000).toFixed(0)}m` : `${d.toFixed(1)}km`;
   };
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-
-    let baseUrl = api.defaults.baseURL.replace('/api', '').replace(/\/$/, '');
-    
-    // Parking images are in uploads/parking-photos/
-    const cleanPath = imagePath.replace(/\\/g, '/');
-    const finalPath = cleanPath.includes('uploads/') 
-      ? cleanPath 
-      : `uploads/parking-photos/${cleanPath}`;
-    
-    const pathPart = finalPath.startsWith('/') ? finalPath.slice(1) : finalPath;
-    return `${baseUrl}/${pathPart}`;
+  const getImageUrlLocal = (imagePath) => {
+    return getImageUrl(imagePath, 'parking');
   };
 
   const [failedImages, setFailedImages] = useState({});
@@ -225,7 +213,7 @@ const ParkingSlotsScreen = ({ navigation }) => {
       onPress={() => handleMarkerPress(item)}
     >
       <Image
-        source={(item.placeImage && !failedImages[item._id]) ? { uri: getImageUrl(item.placeImage) } : require('../../../assets/Parkify.png')}
+        source={(item.placeImage && !failedImages[item._id]) ? { uri: getImageUrlLocal(item.placeImage) } : require('../../../assets/Parkify.png')}
         style={styles.placeImage}
         onError={() => setFailedImages(prev => ({...prev, [item._id]: true}))}
       />
@@ -374,7 +362,7 @@ const ParkingSlotsScreen = ({ navigation }) => {
 
           <ScrollView showsVerticalScrollIndicator={false}>
             <Image
-              source={(selectedPlace.placeImage && !failedImages[selectedPlace._id]) ? { uri: getImageUrl(selectedPlace.placeImage) } : require('../../../assets/Parkify.png')}
+              source={(selectedPlace.placeImage && !failedImages[selectedPlace._id]) ? { uri: getImageUrlLocal(selectedPlace.placeImage) } : require('../../../assets/Parkify.png')}
               style={styles.cardImage}
               onError={() => setFailedImages(prev => ({...prev, [selectedPlace._id]: true}))}
             />
