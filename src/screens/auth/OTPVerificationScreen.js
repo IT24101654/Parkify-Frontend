@@ -19,7 +19,8 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
 const OTPVerificationScreen = ({ route, navigation }) => {
-  const { email, role, type, password } = route.params;
+  const params = route.params || {};
+  const { email = '', role = 'DRIVER', type = 'LOGIN', password = '' } = params;
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [timer, setTimer] = useState(60);
